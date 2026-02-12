@@ -1,0 +1,67 @@
+{
+  "name": "universal-backend-base",
+  "version": "1.0.0",
+  "description": "Base sólida para aplicações escaláveis com Clean Architecture feita por Arthur Gabriel.",
+  "main": "dist/infra/http/server.js",
+  "author": "Arthur Gabriel Oliveira de Macedo",
+  "license": "MIT",
+  "keywords": [
+    "nodejs",
+    "typescript",
+    "clean-architecture",
+    "ddd",
+    "express",
+    "rest-api",
+    "backend",
+    "boilerplate"
+  ],
+  "engines": {
+    "node": ">=20.0.0"
+  },
+  "scripts": {
+    "build": "tsc",
+    "start": "node dist/infra/http/server.js",
+    "dev": "tsx watch src/infra/http/server.ts",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint . --fix",
+    "format": "prettier --write \"src/**/*.{ts,json}\"",
+    "format:check": "prettier --check \"src/**/*.{ts,json}\"",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:coverage": "vitest run --coverage",
+    "test:ui": "vitest --ui"
+  },
+  "dependencies": {
+    "express": "^4.19.2",
+    "express-async-errors": "^3.1.1",
+    "express-rate-limit": "^7.4.1",
+    "helmet": "^8.0.0",
+    "dotenv": "^16.4.5",
+    "cors": "^2.8.5",
+    "zod": "^3.23.8",
+    "bcryptjs": "^2.4.3",
+    "jsonwebtoken": "^9.0.2",
+    "tsyringe": "^4.8.0",
+    "reflect-metadata": "^0.2.2",
+    "pino": "^9.0.0",
+    "pino-pretty": "^11.0.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.14.5",
+    "@types/express": "^4.17.21",
+    "@types/cors": "^2.8.17",
+    "@types/bcryptjs": "^2.4.6",
+    "@types/jsonwebtoken": "^9.0.6",
+    "@typescript-eslint/eslint-plugin": "^7.18.0",
+    "@typescript-eslint/parser": "^7.18.0",
+    "@vitest/coverage-v8": "^1.6.0",
+    "@vitest/ui": "^1.6.0",
+    "eslint": "^8.57.0",
+    "eslint-config-prettier": "^9.1.0",
+    "eslint-plugin-prettier": "^5.1.3",
+    "prettier": "^3.3.2",
+    "typescript": "^5.4.5",
+    "tsx": "^4.15.0",
+    "vitest": "^1.6.0"
+  }
+}
