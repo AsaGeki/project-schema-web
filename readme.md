@@ -1,6 +1,7 @@
 # 🚀 Universal Base Project
 
-> **Uma base sólida e escalável para aplicações fullstack modernas** > Criado por Arthur Gabriel Oliveira de Macedo (AsaGeki)
+> **Uma base sólida e escalável para aplicações fullstack modernas**
+> Criado por Arthur Gabriel Oliveira de Macedo (AsaGeki)
 
 ---
 
@@ -97,17 +98,17 @@ curl http://localhost:3333/health
 
 ## 📚 Documentação
 
-Toda a documentação técnica, de arquitetura e exemplos de uso estão mapeados na pasta **[docs/](https://www.google.com/search?q=docs/)**:
+Toda a documentação técnica, de arquitetura e exemplos de uso estão mapeados na pasta **[docs/](docs/)**:
 
 | Documento | Foco |
 | --- | --- |
-| **[📖 Índice Principal](https://www.google.com/search?q=docs/INDEX.md)** | **Ponto de partida!** Visão geral de tudo. |
-| **[🏗️ Estrutura do Projeto](https://www.google.com/search?q=docs/estrutura-projeto.md)** | Entender a arquitetura de pastas e camadas. |
-| **[🔄 Padrão CRUD](https://www.google.com/search?q=docs/crud.md)** | Guia para criar novos módulos. |
-| **[⚠️ Error Handling](https://www.google.com/search?q=docs/error-handling.md)** | Como lançar e tratar erros corretamente. |
-| **[📊 Logger](https://www.google.com/search?q=docs/logger.md)** | Como utilizar o Pino Logger. |
-| **[🔗 Middlewares](https://www.google.com/search?q=docs/middlewares.md)** | Criação e uso de HTTP middlewares. |
-| **[💉 Injeção de Dependência](https://www.google.com/search?q=docs/dependency-injection.md)** | Como usar o Tsyringe Container. |
+| **[📖 Índice Principal](docs/INDEX.md)** | **Ponto de partida!** Visão geral de tudo. |
+| **[🏗️ Estrutura do Projeto](docs/estrutura-projeto.md)** | Entender a arquitetura de pastas e camadas. |
+| **[🔄 Padrão CRUD](docs/crud.md)** | Guia para criar novos módulos. |
+| **[⚠️ Error Handling](docs/error-handling.md)** | Como lançar e tratar erros corretamente. |
+| **[📊 Logger](docs/logger.md)** | Como utilizar o Pino Logger. |
+| **[🔗 Middlewares](docs/middlewares.md)** | Criação e uso de HTTP middlewares. |
+| **[💉 Injeção de Dependência](docs/dependency-injection.md)** | Como usar o Tsyringe Container. |
 
 ---
 
@@ -131,4 +132,4 @@ Este projeto está sob a licença MIT.
 
 ---
 
-**Feito com dedicação por [AsaGeki**](https://github.com/AsaGeki) 🎮✨
+**Feito com dedicação por [AsaGeki](https://github.com/AsaGeki)** 🎮✨
