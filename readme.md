@@ -109,11 +109,6 @@ Toda a documentação técnica, de arquitetura e exemplos de uso estão mapeados
 | **[🔗 Middlewares](https://www.google.com/search?q=docs/middlewares.md)** | Criação e uso de HTTP middlewares. |
 | **[💉 Injeção de Dependência](https://www.google.com/search?q=docs/dependency-injection.md)** | Como usar o Tsyringe Container. |
 
-### 🧩 Padrões Reutilizáveis & Exemplos
-
-* **[universal/](https://www.google.com/search?q=universal/)**: Contém templates (`PADRAO-CRUD.md`, `PADRAO-ERROS.md`, `PADRAO-MIDDLEWARES.md`) prontos para copiar para outros projetos.
-* **[Implementação Exemplo](https://www.google.com/search?q=backend/src/modules/users/)**: Código fonte do módulo de usuários demonstrando a arquitetura na prática.
-
 ---
 
 ## 🎯 Roadmap
@@ -127,12 +122,6 @@ Toda a documentação técnica, de arquitetura e exemplos de uso estão mapeados
 * [ ] Upload de arquivos com S3
 * [ ] Websockets (Socket.io)
 * [ ] Filas e workers (BullMQ)
-
----
-
-## 🤝 Contribuindo
-
-Sinta-se à vontade para abrir issues ou enviar pull requests. Toda contribuição é bem-vinda!
 
 ---
 
