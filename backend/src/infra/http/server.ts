@@ -25,6 +25,7 @@ app.use(limiter);
 app.use(express.json());
 
 // HTTP Logger
+import { errorHandler } from './middlewares/errorHandler';
 import { httpLogger } from './middlewares/httpLogger';
 app.use(httpLogger);
 
@@ -34,35 +35,17 @@ app.get('/health', (_req, res) => {
   return res.json({ status: 'ok', timestamp: new Date().toISOString() });
 });
 
-// Registre suas rotas aqui
-// app.use('/api/users', userRoutes);
+// Registrar rotas dos módulos
+import { usersRouter } from '@modules/users';
+app.use('/api/users', usersRouter);
 
 // 404
 app.use((_req, res) => {
   return res.status(404).json({ error: 'Rota não encontrada' });
 });
 
-// Error handler
-app.use(
-  (
-    error: Error,
-    _req: express.Request,
-    res: express.Response,
-    _next: express.NextFunction
-  ) => {
-    logger.error({
-      err: error,
-      message: error.message,
-      stack: error.stack,
-    });
-
-    return res.status(500).json({
-      error: 'Erro interno do servidor',
-      message:
-        process.env.NODE_ENV === 'development' ? error.message : undefined,
-    });
-  }
-);
+// Error handler (deve ser o último middleware)
+app.use(errorHandler);
 
 const PORT = process.env.PORT || 3333;
 app.listen(PORT, () => {

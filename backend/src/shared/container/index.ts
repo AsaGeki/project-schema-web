@@ -2,7 +2,13 @@
 import 'reflect-metadata';
 import { container } from 'tsyringe';
 
-// Exemplo de registro:
-// container.registerSingleton<IUserRepository>('UserRepository', UserRepository);
+// Módulo Users
+import { InMemoryUserRepository, IUserRepository } from '@modules/users';
+
+// Registrar repositórios
+container.registerSingleton<IUserRepository>(
+  'UserRepository',
+  InMemoryUserRepository
+);
 
 export { container };
