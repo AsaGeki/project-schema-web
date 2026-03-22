@@ -22,24 +22,20 @@
         "experimentalDecorators": true,
         "emitDecoratorMetadata": true,
         "moduleResolution": "node",
-        "baseUrl": "./src",
+        "baseUrl": ".",
         "paths": {
-            "@/*": [
-                "./*"
+            "@core/*": [
+                "src/core/*"
             ],
-            "@shared/*": [
-                "shared/*"
+            "@infra/*": [
+                "src/infra/*"
             ],
             "@modules/*": [
-                "modules/*"
-            ],
-            "@config/*": [
-                "config/*"
+                "src/modules/*"
             ]
         },
         "types": [
-            "node",
-            "vitest/globals"
+            "node"
         ]
     },
     "include": [
@@ -48,7 +44,6 @@
     "exclude": [
         "node_modules",
         "dist",
-        "**/*.spec.ts",
-        "vitest.config.ts"
+        "**/*.spec.ts"
     ]
 }

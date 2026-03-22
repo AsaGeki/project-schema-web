@@ -1,31 +1,32 @@
-/**
- * Exports do módulo Users
- * Importar do módulo na ordem correta
- */
+// Entidades / Schemas
+export { User } from './infra/database/schemas/User';
 
-// Entidades
-export { User } from './entities/user.entity';
+// Interfaces
+export { type IUser } from './interfaces/IUser';
 
-// Repositories
-export { InMemoryUserRepository } from './infra/database/in-memory-user.repository';
+// Repository Contract
 export {
-  IUserRepository,
   type FindAllQuery,
-  type FindOneOptions,
-} from './repositories/i-user-repository';
+  type IUsersRepository,
+} from './repositories/IUsersRepository';
+
+// Repository Implementation
+export { TypeORMUsersRepository } from './infra/database/repositories/TypeORMUsersRepository';
 
 // DTOs
-export { CreateUserSchema, type CreateUserDTO } from './dtos/create-user.dto';
-export { UpdateUserSchema, type UpdateUserDTO } from './dtos/update-user.dto';
-export { type UserResponseDTO } from './dtos/user-response.dto';
+export { type CreateUserDTO } from './dtos/CreateUserDTO';
+export { type UpdateUserDTO } from './dtos/UpdateUserDTO';
+export { type UserResponseDTO } from './dtos/UserResponseDTO';
 
 // Services
-export { CreateService } from './services/create.service';
-export { DeleteService } from './services/delete.service';
-export { FindAllService } from './services/find-all.service';
-export { FindOneService } from './services/find-one.service';
-export { UpdateService } from './services/update.service';
+export {
+  CreateService,
+  DeleteService,
+  FindAllService,
+  FindOneService,
+  UpdateService,
+} from './services';
 
 // Controller e Rotas
-export { default as UsersController } from './infra/http/users.controller';
-export { usersRouter } from './infra/http/users.routes';
+export { UsersController } from './infra/https/controllers/UsersController';
+export { usersRouter } from './infra/https/routes/users.routes';
