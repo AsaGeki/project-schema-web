@@ -1,388 +1,215 @@
 # 🔗 Middlewares
 
-Documentação sobre middlewares HTTP usados no projeto.
+Middlewares HTTP do Express. Cada um tem uma responsabilidade única.
 
-**Referência:** [universal/PADRAO-MIDDLEWARES.md](../universal/PADRAO-MIDDLEWARES.md)
+## 📁 Localização
 
-## 📍 Ordem de Registro no Express
-
-A **ordem importa** em middlewares Express. O padrão correto é:
-
-```typescript
-// 1. Segurança
-app.use(helmet());
-app.use(cors({ origin: process.env.CORS_ORIGIN }));
-
-// 2. Rate limiting
-app.use(rateLimit({ windowMs: 15 * 60 * 1000, max: 100 }));
-
-// 3. Parsing
-app.use(express.json());
-
-// 4. Log de requisição
-app.use(httpLogger);
-
-// 5. Health check
-app.get('/health', ...);
-
-// 6. Rotas da aplicação
-app.use('/api/users', usersRouter);
-
-// 7. Rota 404
-app.use((req, res) => res.status(404).json({ error: 'Não encontrado' }));
-
-// 8. Error handler (OBRIGATORIAMENTE por último)
-app.use(errorHandler);
+```
+src/core/middlewares/
+├── errorMiddleware.ts    # Handler global de erros
+└── logMiddleware.ts      # Log de requisições HTTP
 ```
 
-## 🚨 HTTP Logger Middleware
+---
 
-Implementação em [backend/src/infra/http/middlewares/httpLogger.ts](../backend/src/infra/http/middlewares/httpLogger.ts)
+## Ordem de Registro
 
-### O que registra
+A ordem no `App` é obrigatória:
 
 ```typescript
-export const httpLogger = (req: Request, res: Response, next: NextFunction) => {
+// src/infra/https/app.ts
+export class App {
+  constructor() {
+    this.server = express();
+    this.middlewares(); // 1. segurança + parsing + log
+    this.routes(); // 2. rotas dos módulos
+    this.errorMiddleware(); // 3. SEMPRE por último
+  }
+
+  private middlewares(): void {
+    this.server.use(helmet());
+    this.server.use(express.json());
+    this.server.use(cors({ origin: process.env.CORS_ORIGIN || "http://localhost:4200" }));
+    this.server.use(logMiddleware);
+  }
+
+  private routes(): void {
+    this.server.use("/api", routes);
+  }
+
+  private errorMiddleware(): void {
+    this.server.use(errorMiddleware);
+  }
+}
+```
+
+---
+
+## `logMiddleware`
+
+Registra todas as requisições HTTP ao detectar `res.on('finish')`.
+
+```typescript
+import { logger } from "@core/utils/logger";
+import { NextFunction, Request, Response } from "express";
+
+const log = logger.child({ prefix: "http" });
+
+export function logMiddleware(req: Request, res: Response, next: NextFunction): void {
   const start = Date.now();
 
   res.on("finish", () => {
     const duration = Date.now() - start;
-    const logLevel = res.statusCode >= 400 ? "error" : "info";
+    const message = `${req.method} ${req.originalUrl} ${res.statusCode} — ${duration}ms`;
 
-    logger[logLevel]({
-      method: req.method,
-      url: req.url,
-      statusCode: res.statusCode,
-      duration: `${duration}ms`,
-      userAgent: req.get("user-agent"),
-      ip: req.ip,
+    if (res.statusCode >= 500) log.error(message);
+    else if (res.statusCode >= 400) log.warn(message);
+    else log.info(message);
+  });
+
+  next();
+}
+```
+
+**Saída no console:**
+
+```
+22/03/2026 - 14:30:00 | ✨ [HTTP]: POST /api/users 201 — 48ms
+22/03/2026 - 14:30:01 | ⚠️ [HTTP]: GET /api/users/abc 404 — 12ms
+22/03/2026 - 14:30:02 | ❌ [HTTP]: POST /api/users 500 — 5ms
+```
+
+---
+
+## `errorMiddleware`
+
+Captura todos os erros passados ao `next(error)` pelo Express.
+
+```typescript
+import { AppError } from "@core/errors/AppError";
+import { logger } from "@core/utils/logger";
+import { ErrorRequestHandler } from "express";
+
+const log = logger.child({ prefix: "error" });
+
+export const errorMiddleware: ErrorRequestHandler = (error, req, res, next) => {
+  if (res.headersSent) return next(error);
+
+  if (error instanceof AppError) {
+    log.warn(error.message, { method: req.method, path: req.path, statusCode: error.statusCode });
+    return res.status(error.statusCode).json({
+      success: false,
+      title: error.title ?? "Erro na requisição",
+      message: error.message,
+      details: error.details ?? null,
     });
-  });
-
-  next();
-};
-```
-
-### Saída em Desenvolvimento
-
-Colorido e legível (pino-pretty):
-
-```
-[10:25:33.456] INFO: GET /api/users 200 - 45ms
-[10:25:34.123] INFO: POST /api/users 201 - 156ms
-[10:25:35.789] ERROR: GET /api/users/999 404 - 12ms
-[10:25:36.234] ERROR: POST /api/users 409 - 89ms
-```
-
-### Saída em Produção
-
-JSON estruturado para agregadores:
-
-```json
-{
-  "level": 30,
-  "time": "2026-02-21T10:25:33.456Z",
-  "method": "GET",
-  "url": "/api/users",
-  "statusCode": 200,
-  "duration": "45ms",
-  "ip": "192.168.1.1",
-  "userAgent": "Mozilla/5.0..."
-}
-```
-
-### Quando Registra
-
-- **Início:** Antes de qualquer rota ser processada
-- **Fim:** Quando `res.finish()` é emitido (resposta completada)
-
-**Vantagem:** Detecta requisições lentas, bloqueadas ou não respondidas.
-
-## ⚠️ Error Handler Middleware
-
-Implementação em [backend/src/infra/http/middlewares/errorHandler.ts](../backend/src/infra/http/middlewares/errorHandler.ts)
-
-### Assinatura
-
-```typescript
-app.use(
-  (err: Error, req: Request, res: Response, next: NextFunction) => { ... }
-);
-```
-
-**Importante:** 4 argumentos! Express reconhece como error handler.
-
-### Funcionamento
-
-```typescript
-export const errorHandler = (err: Error, _req: Request, res: Response, _next: NextFunction) => {
-  // Se é AppError → retornar com statusCode correto
-  if (err instanceof AppError) {
-    return res.status(err.statusCode).json({ error: err.message });
   }
 
-  // Erro desconhecido → logar
-  logger.error({
-    err,
-    message: err.message,
-    stack: err.stack,
-  });
-
-  // Retornar 500
+  log.error("Erro interno do servidor.", { method: req.method, path: req.path, error });
   return res.status(500).json({
-    error: "Erro interno do servidor",
-    // Expor mensagem apenas em dev (segurança)
-    ...(process.env.NODE_ENV === "development" && { message: err.message }),
+    success: false,
+    title: "Erro interno do servidor",
+    message: "Ocorreu um erro interno.",
   });
 };
 ```
 
-### Casos que Captura
+> Ver [error-handling.md](error-handling.md) para detalhes completos.
 
-1. **Erro lançado em middleware/rota:**
+---
 
-```typescript
-app.get("/api/users/:id", (req, res) => {
-  throw new NotFoundError("Usuário não encontrado");
-  // → errorHandler captura
-});
-```
+## Middlewares de Segurança
 
-2. **Promise rejeitada em rota async:**
+### Helmet
 
-```typescript
-app.get("/api/users/:id", async (req, res) => {
-  // Sem try-catch, 'express-async-errors' passa para errorHandler
-  const user = await service.execute(id);
-  return res.json(user);
-});
-```
-
-3. **next(error) em middleware:**
-
-```typescript
-app.use((req, res, next) => {
-  try {
-    // algo
-  } catch (err) {
-    next(err); // → errorHandler captura
-  }
-});
-```
-
-## 🎯 Como Criar um Middleware Customizado
-
-### Middleware simples
-
-```typescript
-const exemplo = (req: Request, res: Response, next: NextFunction) => {
-  console.log(`Requisição para ${req.url}`);
-  next(); // Importante! Passa para próximo middleware
-};
-
-app.use(exemplo);
-```
-
-### Middleware com lógica
-
-```typescript
-const authMiddleware = (req: Request, res: Response, next: NextFunction) => {
-  const token = req.headers.authorization?.split(" ")[1];
-
-  if (!token) {
-    throw new UnauthorizedError("Token ausente");
-    // errorHandler captura e retorna 401
-  }
-
-  try {
-    const decoded = jwt.verify(token, process.env.JWT_SECRET!);
-    req.user = decoded; // Express tipagem customizada
-    next();
-  } catch (err) {
-    throw new UnauthorizedError("Token inválido");
-  }
-};
-
-app.use(authMiddleware); // Aplica a todas as rotas
-// OU
-app.post("/api/protected", authMiddleware, controller.handle); // Apenas aquela rota
-```
-
-### Com tipagem correct
-
-```typescript
-import { Request, Response, NextFunction } from "express";
-
-interface AuthRequest extends Request {
-  user?: { id: string; email: string };
-}
-
-const authMiddleware = (req: AuthRequest, res: Response, next: NextFunction) => {
-  const token = req.headers.authorization?.split(" ")[1];
-  if (!token) throw new UnauthorizedError();
-
-  // Decodificar e adicionar ao req
-  req.user = jwt.verify(token, process.env.JWT_SECRET!);
-  next();
-};
-```
-
-## 📦 Middlewares de Segurança
-
-### Helmet (XSS, Clickjacking, etc)
+Configura headers de segurança HTTP automaticamente:
 
 ```typescript
 import helmet from "helmet";
 app.use(helmet());
-
-// Ou customizado:
-app.use(
-  helmet({
-    contentSecurityPolicy: false,
-    hsts: { maxAge: 31536000 },
-  }),
-);
+// X-Content-Type-Options, X-Frame-Options, HSTS, etc.
 ```
 
-### CORS (Cross-Origin)
+### CORS
 
 ```typescript
 import cors from "cors";
-
-app.use(
-  cors({
-    origin: process.env.CORS_ORIGIN || "http://localhost:4200",
-    credentials: true,
-    methods: ["GET", "POST", "PATCH", "DELETE"],
-    allowedHeaders: ["Content-Type", "Authorization"],
-  }),
-);
+app.use(cors({ origin: process.env.CORS_ORIGIN || "http://localhost:4200" }));
 ```
 
-### Rate Limiting (DDoS)
+Configure `CORS_ORIGIN` no `.env` para restringir origens em produção.
+
+### Rate Limit
+
+Pode ser adicionado em `middlewares()` para proteção de abuso:
 
 ```typescript
 import rateLimit from "express-rate-limit";
 
 const limiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutos
-  max: 100, // máx 100 requisições por IP
-  message: { error: "Muitas requisições, tente mais tarde" },
-  standardHeaders: true, // Retorna info no header `RateLimit-*`
+  max: 100,
+  standardHeaders: true,
   legacyHeaders: false,
+  message: { success: false, message: "Muitas requisições. Tente novamente mais tarde." },
 });
 
-app.use(limiter);
-
-// Ou diferente por rota:
-const strictLimiter = rateLimit({ windowMs: 60 * 1000, max: 5 });
-app.post("/api/auth/login", strictLimiter, loginController.handle);
+app.use("/api", limiter);
 ```
 
-## 🔄 Fluxo Completo com Middlewares
+---
 
-```
-Client Request
-  ↓
-helmet (Headers seguros)
-  ↓
-cors (CORS headers)
-  ↓
-rateLimit (DDoS check)
-  ↓
-express.json() (Parse JSON)
-  ↓
-httpLogger (Log antes)
-  ↓
-authMiddleware (Validar token)
-  ↓
-Router → Controller
-  ↓
-Service (lógica)
-  ↓
-httpLogger (Log depois - duração)
-  ↓
-Response enviada
-  ↓
-[Se erro] → errorHandler (Tratamento)
-  ↓
-Client Response
-```
+## Middleware de Autenticação (exemplo)
 
-## 🚨 Debug de Middlewares
-
-Adicione logs para entender a ordem:
+Para rotas protegidas, crie um middleware em `src/core/middlewares/authMiddleware.ts`:
 
 ```typescript
-const debugMiddleware = (name: string) => {
-  return (req: Request, res: Response, next: NextFunction) => {
-    logger.debug(`[MIDDLEWARE] ${name} - ${req.method} ${req.url}`);
+import { UnauthorizedError } from "@core/errors/AppError";
+import jwt from "jsonwebtoken";
+import { NextFunction, Request, Response } from "express";
+
+export function authMiddleware(req: Request, _res: Response, next: NextFunction): void {
+  const token = req.headers.authorization?.split(" ")[1];
+  if (!token) throw new UnauthorizedError("Token não fornecido.");
+
+  try {
+    const payload = jwt.verify(token, process.env.JWT_SECRET!);
+    (req as any).user = payload;
     next();
-  };
-};
-
-app.use(debugMiddleware("helmet"));
-app.use(helmet());
-
-app.use(debugMiddleware("cors"));
-app.use(cors({ origin: process.env.CORS_ORIGIN }));
-
-// ... resto dos middlewares
+  } catch {
+    throw new UnauthorizedError("Token inválido ou expirado.");
+  }
+}
 ```
 
-## 📝 Comparação: Middleware vs Rota vs Service
-
-| Local      | Usa para                        | Exemplo                    |
-| ---------- | ------------------------------- | -------------------------- |
-| Middleware | Lógica compartilhada global     | Autenticação (todas rotas) |
-| Rota       | Lógica específica da requisição | GET /api/users/:id         |
-| Service    | Lógica pura de negócio          | Validar e-mail             |
+Uso nas rotas:
 
 ```typescript
-// Middleware globalizando autenticação
-app.use(authenticateToken);
+import { authMiddleware } from "@core/middlewares/authMiddleware";
 
-// Rota específica convertendo para controller
-router.get("/users", controller.findAll.bind(controller));
-
-// Service com lógica pura
-const users = await this.userRepository.findAll(query);
+router.get("/profile", authMiddleware, controller.profile.bind(controller));
 ```
 
-## 🧪 Testando Middlewares
+---
 
-```typescript
-import { describe, it, expect } from "vitest";
-import request from "supertest";
-import { app } from "./server";
+## Fluxo Completo
 
-describe("Middlewares", () => {
-  it("httpLogger deve registrar requisição", async () => {
-    const response = await request(app).get("/health");
-    expect(response.status).toBe(200);
-    // Log será emitido automaticamente
-  });
-
-  it("errorHandler deve capturar erros lançados", async () => {
-    const response = await request(app).get("/api/users/999");
-    expect(response.status).toBe(404);
-    expect(response.body.error).toBe("Registro não encontrado");
-  });
-
-  it("rate limiter deve bloquear após limite", async () => {
-    const strictApp = rateLimit({ max: 2 })(app);
-    await request(strictApp).get("/health");
-    await request(strictApp).get("/health");
-    const third = await request(strictApp).get("/health");
-    expect(third.status).toBe(429); // Too Many Requests
-  });
-});
 ```
-
-## 📚 Referências
-
-- [Implementações](../backend/src/infra/http/middlewares/)
-- [Express Middleware Docs](https://expressjs.com/en/guide/using-middleware.html)
-- [Helmet Docs](https://helmetjs.github.io/)
-- [CORS Docs](https://github.com/expressjs/cors)
-- [Rate Limit Docs](https://github.com/nfriedly/express-rate-limit)
+Request
+   ↓
+helmet()              – headers de segurança
+   ↓
+cors()                – validação de origem
+   ↓
+express.json()        – parse do body
+   ↓
+logMiddleware         – inicia cronômetro
+   ↓
+[authMiddleware]      – (opcional, por rota)
+   ↓
+Router / Controller   – lógica da rota
+   ↓
+logMiddleware finish  – registra método, path, status, duração
+   ↓
+[se erro] errorMiddleware – retorna JSON de erro padronizado
+```

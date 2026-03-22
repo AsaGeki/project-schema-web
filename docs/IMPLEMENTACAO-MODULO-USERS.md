@@ -1,254 +1,170 @@
-# 🎯 Implementação do Padrão CRUD - Módulo Users
+# 👤 Implementação do Módulo Users
 
-Implementação completa do módulo `users` seguindo o padrão documentado em `universal/PADRAO-CRUD.md`, com todos os arquivos em **kebab-case**.
+Guia passo-a-passo da implementação completa do módulo `users`, servindo como referência para criar novos módulos.
 
-## 📁 Estrutura Completa
+> **Stack:** TypeORM + PostgreSQL · tsyringe · Winston · TypeScript interfaces (sem Zod)
+
+## 📂 Estrutura Completa
 
 ```
-backend/src/
-├── modules/
-│   └── users/                                    # Módulo domínio de usuários
-│       ├── entities/
-│       │   └── user.entity.ts                   # Classe User (modelo puro)
-│       ├── repositories/
-│       │   └── i-user-repository.ts             # Interface com contratos
-│       ├── dtos/
-│       │   ├── create-user.dto.ts               # Schema + tipo para criação
-│       │   ├── update-user.dto.ts               # Schema + tipo para atualização
-│       │   └── user-response.dto.ts             # DTO de resposta (sem dados sensíveis)
-│       ├── services/
-│       │   ├── find-all.service.ts              # Service para listar com paginação
-│       │   ├── find-one.service.ts              # Service para buscar por ID
-│       │   ├── create.service.ts                # Service para criar
-│       │   ├── update.service.ts                # Service para atualizar
-│       │   └── delete.service.ts                # Service para deletar
-│       ├── infra/
-│       │   ├── database/
-│       │   │   └── in-memory-user.repository.ts # Implementação fake (use TypeORM em produção)
-│       │   └── http/
-│       │       ├── users.controller.ts          # Controller como classe
-│       │       └── users.routes.ts              # Rotas com .bind()
-│       ├── index.ts                             # Exports do módulo
-│       └── README.md                            # Documentação interna
-├── shared/
-│   ├── errors/
-│   │   └── index.ts                             # Classes AppError + subclasses (400, 401, etc)
-│   ├── container/
-│   │   └── index.ts                             # Injeção de dependência (tsyringe)
-│   └── infra/
+backend/src/modules/users/
+├── container/
+│   └── index.ts                              # Bindings DI do módulo
+├── dtos/
+│   ├── CreateUserDTO.ts                      # { name, email, password }
+│   ├── UpdateUserDTO.ts                      # { name?, email? }
+│   └── UserResponseDTO.ts                    # { id, name, email, createdAt, updatedAt }
+├── interfaces/
+│   └── IUser.ts                              # Interface do modelo
+├── repositories/
+│   └── IUsersRepository.ts                   # Contrato do repositório
+├── services/
+│   └── index.ts                              # Create, FindAll, FindOne, Update, Delete
 ├── infra/
-│   └── http/
-│       ├── middlewares/
-│       │   ├── httpLogger.ts                    # Log de requisições (Pino)
-│       │   └── errorHandler.ts                  # Handler global de erros
-│       └── server.ts                            # Configuração Express com rotas
-└── config/
-    └── logger.ts                                # Configuração Pino Logger
+│   ├── database/
+│   │   ├── schemas/
+│   │   │   └── User.ts                       # Entidade TypeORM
+│   │   └── repositories/
+│   │       └── TypeORMUsersRepository.ts     # Implementação TypeORM
+│   └── https/
+│       ├── controllers/
+│       │   └── UsersController.ts
+│       └── routes/
+│           └── users.routes.ts
+├── index.ts                                  # Barrel exports
+└── README.md
 ```
 
-## 🚀 Endpoints da API
+## 🌐 Endpoints da API
 
-Base URL: `http://localhost:3333/api/users`
+**Base URL:** `http://localhost:3333/api/users`
 
-### 📋 Listar usuários (com paginação e busca)
+| Método   | Path   | Descrição                        | Status          |
+| -------- | ------ | -------------------------------- | --------------- |
+| `GET`    | `/`    | Listar todos (paginação + busca) | 200             |
+| `GET`    | `/:id` | Buscar por ID                    | 200 / 404       |
+| `POST`   | `/`    | Criar usuário                    | 201 / 409       |
+| `PATCH`  | `/:id` | Atualizar                        | 200 / 404 / 409 |
+| `DELETE` | `/:id` | Deletar                          | 204 / 404       |
 
-```bash
+### GET `/api/users`
+
+Query params opcionais: `skip`, `take`, `search`, `sortBy`, `sortDesc`
+
+```
 GET /api/users?skip=0&take=10&search=joão&sortBy=name&sortDesc=false
+```
 
-Resposta (200):
+**Resposta 200:**
+
+```json
 {
-  "data": [
-    {
-      "id": "uuid-string",
-      "name": "João Silva",
-      "email": "joao@example.com",
-      "createdAt": "2026-02-21T10:00:00.000Z",
-      "updatedAt": "2026-02-21T10:00:00.000Z"
-    }
-  ],
+  "data": [{ "id": "uuid", "name": "João Silva", "email": "joao@email.com", "createdAt": "...", "updatedAt": "..." }],
   "total": 1
 }
 ```
 
-### 🔍 Buscar um usuário
+### POST `/api/users`
 
-```bash
-GET /api/users/uuid-string
-
-Resposta (200):
-{
-  "id": "uuid-string",
-  "name": "João Silva",
-  "email": "joao@example.com",
-  "createdAt": "2026-02-21T10:00:00.000Z",
-  "updatedAt": "2026-02-21T10:00:00.000Z"
-}
-
-Erro (404):
-{
-  "error": "Usuário não encontrado"
-}
+```json
+{ "name": "João Silva", "email": "joao@email.com", "password": "senha123" }
 ```
 
-### ➕ Criar usuário
+**Resposta 201:**
 
-```bash
-POST /api/users
-Content-Type: application/json
-
-{
-  "name": "João Silva",
-  "email": "joao@example.com",
-  "password": "senha123"
-}
-
-Resposta (201):
-{
-  "id": "uuid-string",
-  "name": "João Silva",
-  "email": "joao@example.com",
-  "createdAt": "2026-02-21T10:00:00.000Z",
-  "updatedAt": "2026-02-21T10:00:00.000Z"
-}
-
-Erros:
-- (400) BadRequestError - Dados inválidos ou senha fraca
-- (409) ConflictError - E-mail já cadastrado
+```json
+{ "id": "uuid", "name": "João Silva", "email": "joao@email.com", "createdAt": "...", "updatedAt": "..." }
 ```
 
-### ✏️ Atualizar usuário
+**Resposta 409** (e-mail duplicado):
 
-```bash
-PATCH /api/users/uuid-string
-Content-Type: application/json
-
-{
-  "name": "João Silva Atualizado",
-  "email": "joao.novo@example.com"
-}
-
-Resposta (200):
-{
-  "id": "uuid-string",
-  "name": "João Silva Atualizado",
-  "email": "joao.novo@example.com",
-  "createdAt": "2026-02-21T10:00:00.000Z",
-  "updatedAt": "2026-02-21T11:00:00.000Z"
-}
-
-Erros:
-- (400) BadRequestError - Dados inválidos
-- (404) NotFoundError - Usuário não encontrado
-- (409) ConflictError - E-mail já em uso
+```json
+{ "success": false, "title": "Erro na requisição", "message": "E-mail já cadastrado.", "details": null }
 ```
 
-### 🗑️ Deletar usuário
-
-```bash
-DELETE /api/users/uuid-string
-
-Resposta (204): [vazio]
-
-Erro (404):
-{
-  "error": "Usuário não encontrado"
-}
-```
-
-## 🧪 Testando a API
-
-### Com cURL
-
-```bash
-# Criar usuário
-curl -X POST http://localhost:3333/api/users \
-  -H "Content-Type: application/json" \
-  -d '{
-    "name": "João Silva",
-    "email": "joao@example.com",
-    "password": "senha123"
-  }'
-
-# Listar usuários
-curl http://localhost:3333/api/users
-
-# Buscar um usuário
-curl http://localhost:3333/api/users/{id}
-
-# Atualizar
-curl -X PATCH http://localhost:3333/api/users/{id} \
-  -H "Content-Type: application/json" \
-  -d '{"name": "Novo Nome"}'
-
-# Deletar
-curl -X DELETE http://localhost:3333/api/users/{id}
-```
-
-### Com Postman/Insomnia
-
-1. Import a coleção ou crie requisições manualmente
-2. Use `{{BASE_URL}}` = `http://localhost:3333`
-3. Endpoints:
-   - `GET {{BASE_URL}}/api/users`
-   - `POST {{BASE_URL}}/api/users`
-   - `GET {{BASE_URL}}/api/users/:id`
-   - `PATCH {{BASE_URL}}/api/users/:id`
-   - `DELETE {{BASE_URL}}/api/users/:id`
+---
 
 ## 🔄 Fluxo de Dados
 
+### `POST /api/users`
+
 ```
-Client Request
-     ↓
-Express Router (/api/users/:id)
-     ↓
-Controller Method (ex: create)
-     ↓
-Container.resolve(Service)
-     ↓
-Service.execute(data)
-     │
-     ├─→ Validação com Zod
-     ├─→ Verificações de negócio
-     ├─→ Repository.create()/findAll()/etc
-     └─→ Mapeamento DTO (sem dados sensíveis)
-     ↓
-Controller retorna Response
-     ↓
-httpLogger middleware (loga requisição)
-     ↓
-Client Response (200/201/400/404/409/etc)
-
-[Se erro → errorHandler captura AppError → JSON com statusCode correto]
+Request
+   ↓
+usersRouter → UsersController.create
+   ↓
+container.resolve(CreateService)
+   ↓
+CreateService.execute({ name, email, password })
+   ├─ usersRepository.findByEmail(email) → conflict? throw ConflictError
+   ├─ bcrypt.hash(password, 10)
+   └─ usersRepository.create({ name, email, passwordHash })
+         ↓
+TypeORMUsersRepository.create
+   └─ INSERT INTO users (name, email, password_hash) VALUES (...)
+         ↓
+Service desestrutura User, omite passwordHash
+   └─ retorna UserResponseDTO
+         ↓
+Controller → res.status(201).json(userResponseDTO)
+         ↓
+[se AppError] errorMiddleware → res.status(statusCode).json({ success, title, message })
+         ↓
+logMiddleware → POST /api/users 201 — 48ms
 ```
 
-## 🔑 Principios Implementados
+### `GET /api/users?skip=0&take=10`
 
-✅ **Clean Architecture** - Separação clara de camadas
-✅ **DDD** - Módulo organizado por domínio
-✅ **Dependency Injection** - tsyringe resolve automaticamente
-✅ **Validação Zod** - Type-safe em runtime
-✅ **Error Handling** - AppError com status codes HTTP
-✅ **Logging** - Todas as requisições são logadas
-✅ **Kebab-case** - Nomes de arquivos em kebab-case
-✅ **Repository Pattern** - Interface agnóstica a DB
-✅ **One Service per Operation** - Cada service é responsável por uma ação
+```
+UsersController.findAll
+   ↓
+FindAllService.execute({ skip: 0, take: 10 })
+   ├─ usersRepository.findAll({ skip, take }) → User[]
+   └─ usersRepository.count({}) → number
+         ↓
+Para cada User, desestrutura omitindo passwordHash
+   └─ retorna { data: UserResponseDTO[], total: number }
+```
 
-## 📚 Como Estender
+---
 
-Para criar um novo módulo (ex: `products`):
+## 📋 Como Criar um Módulo Equivalente
 
-1. Copie a estrutura de `users/`
-2. Renomeie para `products/`
-3. Atualize nomes de classes/interfaces
-4. Registre no container de injeção de dependência
-5. Adicione as rotas no `server.ts`
+Siga o [crud.md](crud.md) e substitua `User/users` pelo nome do novo domínio.
 
-Veja [modules/users/README.md](src/modules/users/README.md) para mais detalhes.
+**Etapas resumidas:**
 
-## 🔗 Referências
+1. Criar a entidade TypeORM em `infra/database/schemas/`
+2. Criar a interface do repositório em `repositories/`
+3. Criar as DTOs (Create, Update, Response) em `dtos/`
+4. Implementar o repositório TypeORM em `infra/database/repositories/`
+5. Criar os services em `services/index.ts`
+6. Criar controller e rotas em `infra/https/`
+7. Criar `container/index.ts` com o binding
+8. Exportar tudo em `index.ts`
+9. Registrar a rota em `src/infra/https/routes/routes.ts`
+10. Importar o container em `src/server.ts`
 
-- [PADRAO-CRUD.md](../../universal/PADRAO-CRUD.md)
-- [PADRAO-ERROS.md](../../universal/PADRAO-ERROS.md)
-- [PADRAO-MIDDLEWARES.md](../../universal/PADRAO-MIDDLEWARES.md)
-- [modules/users/README.md](src/modules/users/README.md)
+---
+
+## 🔐 Segurança
+
+- **Senha**: nunca armazenada em plain text — `bcrypt.hash(password, 10)` antes de persistir
+- **Resposta**: `passwordHash` é sempre removido antes de retornar ao cliente
+- **Conflito**: e-mail verificado por unicidade tanto no CREATE quanto no UPDATE
+
+```typescript
+// ✅ Como o UserResponseDTO é gerado
+const { passwordHash: _, ...response } = user;
+return response as UserResponseDTO;
+```
+
+---
+
+## 📚 Referências
+
+- [crud.md](crud.md) — Padrão CRUD completo
+- [error-handling.md](error-handling.md) — Classes de AppError
+- [dependency-injection.md](dependency-injection.md) — Container tsyringe
+- [logger.md](logger.md) — Winston logger
+- [backend/src/modules/users/README.md](../backend/src/modules/users/README.md) — Docs internas do módulo

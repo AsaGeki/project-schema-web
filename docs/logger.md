@@ -1,224 +1,167 @@
-# 📊 Logger - Pino
+# 📋 Logger
 
-Documentação completa sobre como usar o **Pino Logger** para logging estruturado de alta performance.
+Logger estruturado com **Winston** + rotação de arquivos com **winston-daily-rotate-file**.
 
-## 🔧 Configuração
+## 📁 Localização
 
-O Pino está configurado em [backend/src/config/logger.ts](../backend/src/config/logger.ts).
+`src/core/utils/logger.ts`
 
-### Inicializar em um arquivo
+---
 
-```typescript
-import logger from "@config/logger";
+## Configuração
 
-logger.info("Mensagem de info");
-logger.error("Mensagem de erro");
-logger.warn("Aviso");
-logger.debug("Debug (apenas em desenvolvimento)");
-```
+### Níveis Customizados
 
-## 📝 Níveis de Log
+O logger usa níveis próprios em vez dos padrões do Winston:
 
-| Nível | Número | Uso                                 |
-| ----- | ------ | ----------------------------------- |
-| fatal | 60     | Sistema não pode continuar operando |
-| error | 50     | Erro que afeta a operação           |
-| warn  | 40     | Situação que pode causar problemas  |
-| info  | 30     | Informações gerais (padrão)         |
-| debug | 20     | Informações detalhadas (apenas dev) |
-| trace | 10     | Informações muito detalhadas        |
+| Nível    | Valor | Emoji | Quando usar                                                      |
+| -------- | ----- | ----- | ---------------------------------------------------------------- |
+| `error`  | 0     | ❌    | Erros que quebram o fluxo                                        |
+| `notice` | 1     | 📢    | Eventos importantes de sistema (servidor iniciado, DB conectado) |
+| `warn`   | 2     | ⚠️    | Situações anormais mas recuperáveis                              |
+| `info`   | 3     | ✨    | Eventos de negócio esperados                                     |
+| `debug`  | 4     | 🔍    | Informações de desenvolvimento                                   |
 
-## 🌍 Variáveis de Ambiente
+### Nível Ativo por Ambiente
 
-```bash
-# Define o nível de log
-# Padrão: 'info'
-LOG_LEVEL=debug
+Controlado pela variável `NODE_ENV`:
 
-# Define o ambiente
-# Afeta formatação: 'development' usa pino-pretty, 'production' usa JSON
-NODE_ENV=development
-```
+| `NODE_ENV`     | Nível ativo | Visível                   |
+| -------------- | ----------- | ------------------------- |
+| `dev`          | `info`      | error, notice, warn, info |
+| `debug`        | `debug`     | todos                     |
+| qualquer outro | `notice`    | error, notice             |
 
-## 📋 Exemplos Comuns
+### Transports
 
-### Info (geral)
+- **Console** — formatação colorida estilo pino-pretty (dev/debug)
+- **`logs/errors/error-DD_MM_YYYY.log`** — apenas `error`, JSON, max 10MB, 14 dias
+- **`logs/combined/combined-DD_MM_YYYY.log`** — `notice` e acima, JSON, max 20MB, 7 dias
 
-```typescript
-logger.info("Servidor iniciado na porta 3333");
-logger.info({ userId: "123", action: "login" }, "Usuário fez login");
-```
+---
 
-### Error (com contexto)
+## Uso
+
+### Importação
 
 ```typescript
-logger.error(
-  {
-    err: new Error("Falha na conexão"),
-    userId: "123",
-    retry: 3,
-  },
-  "Erro ao conectar ao banco",
-);
+import { logger } from "@core/utils/logger";
 ```
 
-### Debug (desenvolvimento)
+### Logger padrão
 
 ```typescript
-if (process.env.NODE_ENV === "development") {
-  logger.debug({ data: user }, "Usuário criado com sucesso");
+logger.info("Operação concluída.");
+logger.warn("Conexão lenta detectada.", { duration: 2500 });
+logger.error("Falha ao processar pagamento.", { orderId, error });
+logger.notice("Servidor iniciado.", { port: 3333, env: "prod" });
+logger.debug("Query executada.", { sql, params });
+```
+
+### Child Loggers (recomendado)
+
+Use `logger.child({ prefix })` para identificar a origem do log no console:
+
+```typescript
+// Em um service ou módulo
+const log = logger.child({ prefix: "users" });
+
+log.info("Usuário criado.", { userId });
+// Saída: 22/03/2026 - 14:30:00 | ✨ [USERS]: Usuário criado.
+//        { "userId": "abc-123" }
+
+// Em middlewares
+const log = logger.child({ prefix: "http" });
+const log = logger.child({ prefix: "error" });
+const log = logger.child({ prefix: "server" });
+const log = logger.child({ prefix: "database" });
+```
+
+---
+
+## Formato no Console (dev/debug)
+
+```
+22/03/2026 - 14:30:00 | ✨ [INFO]: Mensagem aqui.
+22/03/2026 - 14:30:01 | ⚠️ [HTTP]: POST /api/users 409 — 12ms
+22/03/2026 - 14:30:02 | ❌ [ERROR]: Erro interno.
+{
+  "method": "POST",
+  "path": "/api/users",
+  "error": { ... }
 }
 ```
 
-### Warn (aviso)
+- Timestamp cinza (`\x1b[90m`)
+- Nível colorido por categoria
+- Metadados em JSON identado abaixo da mensagem
 
-```typescript
-logger.warn(
-  {
-    field: "email",
-    reason: "Formato não padrão",
-  },
-  "Validação suspeita",
-);
-```
+---
 
-## 🎯 Formatação por Ambiente
+## Formato em Arquivo (produção)
 
-### Desenvolvimento (pino-pretty)
-
-Saída colorida e legível:
-
-```
-[10:25:33.456] INFO (1234): 🚀 Servidor rodando em http://localhost:3333
-[10:25:33.460] INFO (1234): 📊 Health check disponível em http://localhost:3333/health
-```
-
-### Produção (JSON)
-
-Saída estruturada para agregadores (Datadog, Splunk, etc):
+JSON estruturado para ingestão por ferramentas de log (Datadog, ELK, etc.):
 
 ```json
 {
-  "level": 30,
-  "time": "2026-02-21T10:25:33.456Z",
-  "pid": 1234,
-  "hostname": "server",
-  "msg": "Servidor rodando",
-  "port": 3333
+  "level": "info",
+  "message": "POST /api/users 201 — 48ms",
+  "timestamp": "22/03/2026 - 14:30:00",
+  "prefix": "http"
 }
 ```
 
-## 🔐 Segurança
+---
 
-### ⚠️ NUNCA faça log de dados sensíveis
+## Boas Práticas
 
-```typescript
-// ❌ ERRADO - expõe senha
-logger.info({ user, password }, "Login tentado");
-
-// ✅ CORRETO - só log do que interessa
-logger.info({ userId: user.id, email: user.email }, "Login tentado");
-```
+### ✅ Faça
 
 ```typescript
-// ❌ ERRADO - expõe token
-logger.debug({ token }, "Autenticação bem-sucedida");
+// Inclua contexto relevante
+log.error("Falha ao enviar e-mail.", { userId, email, error });
 
-// ✅ CORRETO - apenas confirma sucesso
-logger.info("Autenticação bem-sucedida");
+// Use child loggers por módulo
+const log = logger.child({ prefix: "payments" });
+
+// Níveis corretos por situação
+log.notice("Servidor conectado ao banco."); // evento de sistema
+log.info("Pedido criado.", { orderId }); // evento de negócio
+log.warn("Token próximo do vencimento."); // alerta
+log.error("Pagamento recusado.", { error }); // falha
 ```
 
-## 📡 Middleware HTTP Logger
-
-O [backend/src/infra/http/middlewares/httpLogger.ts](../backend/src/infra/http/middlewares/httpLogger.ts) usa Pino para logar todas as requisições HTTP:
+### ❌ Evite
 
 ```typescript
-// Log automático ao finalizar requisição:
-GET /api/users 200 OK - 45ms
+// Nunca logar dados sensíveis
+log.info("Usuário autenticado.", { password, token }); // PROIBIDO
 
-// Contexto do log:
-- method
-- url
-- statusCode
-- duration
-- ip
-- userAgent
+// Nunca usar console.log
+console.log("servidor iniciado"); // use log.notice()
+
+// Não logar objetos gigantes sem filtrar
+log.debug("Request completo", { req }); // muito ruído
 ```
 
-## 🔍 Filtrando Logs
+---
 
-### Por nível (desenvolvimento)
+## Rotação de Arquivos
 
-```bash
-# Apenas erros e acima (error, fatal)
-LOG_LEVEL=error npm run dev
-
-# Debug e acima (debug, info, warn, error, fatal)
-LOG_LEVEL=debug npm run dev
-```
-
-### Em produção com agregador
-
-Use filtros no Datadog/Splunk:
+Os arquivos de log são criados/rotacionados automaticamente com `winston-daily-rotate-file`:
 
 ```
-level >= 40  # Apenas warning e error
+logs/
+├── errors/
+│   ├── error-22_03_2026.log
+│   └── error-21_03_2026.log.gz   # comprimido após rotação
+└── combined/
+    ├── combined-22_03_2026.log
+    └── combined-21_03_2026.log.gz
 ```
 
-## 📦 Child Loggers
+- Arquivo comprimido (`.gz`) após rotação diária
+- Limite por tamanho: `10m` (errors) e `20m` (combined)
+- Retenção: `14d` (errors) e `7d` (combined)
 
-Para adicionar contexto que é repetido:
-
-```typescript
-const requestLogger = logger.child({
-  userId: "123",
-  requestId: "abc-def",
-});
-
-requestLogger.info("Ação realizada"); // Inclui userId e requestId automaticamente
-```
-
-## 🚀 Performance
-
-Pino é **muito rápido**:
-
-- Sérialização otimizada
-- Não afeta performance da aplicação
-- Recomendado para produção
-
-Não use `console.log` - use `logger.info` em vez disso.
-
-## 📚 Referências
-
-- [Pino Official Docs](https://getpino.io/)
-- [Pino Logger Guide](../backend/src/config/LOGGER_GUIDE.md) - Guia técnico
-- [backend/src/config/logger.ts](../backend/src/config/logger.ts) - Implementação
-
-## 💡 Dica
-
-Sempre estruture seus logs com contexto:
-
-```typescript
-// Bom
-logger.error(
-  {
-    action: "create_user",
-    status: "failed",
-    reason: error.message,
-  },
-  "Falha ao criar usuário",
-);
-
-// Melhor ainda
-logger.error(
-  {
-    module: "users",
-    service: "CreateService",
-    method: "execute",
-    error: error.name,
-    message: error.message,
-    data: { email: user.email }, // não sensível!
-  },
-  "CreateService falhou",
-);
-```
+> Os diretórios `logs/errors/` e `logs/combined/` são criados automaticamente.

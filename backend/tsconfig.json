@@ -1,29 +1,24 @@
 {
     "compilerOptions": {
         "target": "ES2022",
-        "module": "commonjs",
-        "lib": [
-            "ES2022"
-        ],
-        "outDir": "./dist",
-        "rootDir": "./src",
-        "removeComments": true,
-        "strict": true,
-        "noImplicitAny": true,
-        "strictNullChecks": true,
-        "strictPropertyInitialization": false,
-        "noUnusedLocals": true,
-        "noUnusedParameters": true,
-        "noImplicitReturns": true,
-        "skipLibCheck": true,
+        "module": "CommonJS",
+        "moduleResolution": "node",
         "esModuleInterop": true,
         "forceConsistentCasingInFileNames": true,
-        "resolveJsonModule": true,
+        "skipLibCheck": true,
+        "outDir": "./dist",
+        "rootDir": "./src",
+        "strict": true,
+        "noImplicitReturns": true,
+        "allowUnreachableCode": false,
+        "noFallthroughCasesInSwitch": true,
         "experimentalDecorators": true,
         "emitDecoratorMetadata": true,
-        "moduleResolution": "node",
         "baseUrl": ".",
         "paths": {
+            "@config/*": [
+                "src/config/*"
+            ],
             "@core/*": [
                 "src/core/*"
             ],
@@ -32,11 +27,11 @@
             ],
             "@modules/*": [
                 "src/modules/*"
+            ],
+            "@shared/*": [
+                "src/shared/*"
             ]
-        },
-        "types": [
-            "node"
-        ]
+        }
     },
     "include": [
         "src/**/*"
@@ -44,6 +39,6 @@
     "exclude": [
         "node_modules",
         "dist",
-        "**/*.spec.ts"
+        "coverage"
     ]
 }

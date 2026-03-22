@@ -1,379 +1,418 @@
-# 🔄 Padrão CRUD
+# 🔨 Padrão CRUD
 
-Guia completo sobre o padrão CRUD implementado no projeto.
+Guia de referência para criar novos módulos CRUD seguindo a arquitetura do projeto.
 
-**Referência:** [universal/PADRAO-CRUD.md](../universal/PADRAO-CRUD.md)
+> **Convenções:** `PascalCase` para classes e interfaces; `camelCase` para arquivos; prefixo `I` para interfaces de repositório.
 
-## 📊 Visão Geral
-
-O padrão CRUD separa responsabilidades em camadas:
+## 📂 Estrutura de um Módulo
 
 ```
-┌─────────┐
-│ Client  │
-└────┬────┘
-     │
-┌────▼──────────────────────────────┐
-│ Router/Controller                  │ Recebe requisição
-├────────────────────────────────────┤
-│ Service (FindAll, Create, etc)     │ Lógica de negócio
-├────────────────────────────────────┤
-│ Repository (Interface)             │ Contrato com dados
-├────────────────────────────────────┤
-│ Repository (Implementação)         │ TypeORM, Prisma, etc
-└────┬──────────────────────────────┘
-     │
-  Database
-```
-
-## 📁 Estrutura de um Módulo
-
-```
-modules/[nome_do_modulo]/
-├── entities/
-│   └── modelo.entity.ts              # Classe pura (sem dependências)
-├── repositories/
-│   └── i-modelo-repository.ts        # Interface/Contrato
+modules/<nome>/
+├── container/
+│   └── index.ts                  # Registra bindings DI do módulo
 ├── dtos/
-│   ├── create-modelo.dto.ts          # Zod + tipo TS
-│   ├── update-modelo.dto.ts          # Zod + tipo TS
-│   └── modelo-response.dto.ts        # Resposta sem dados sensíveis
+│   ├── Create<Nome>DTO.ts        # Dados de entrada para criação
+│   ├── Update<Nome>DTO.ts        # Dados de entrada para atualização
+│   └── <Nome>ResponseDTO.ts      # Dados de saída (sem campos sensíveis)
+├── interfaces/
+│   └── I<Nome>.ts                # Interface do modelo de domínio
+├── repositories/
+│   └── I<Nome>sRepository.ts     # Contrato do repositório
 ├── services/
-│   ├── find-all.service.ts           # Listar (paginação, busca)
-│   ├── find-one.service.ts           # Buscar por ID
-│   ├── create.service.ts             # Criar novo
-│   ├── update.service.ts             # Atualizar existente
-│   └── delete.service.ts             # Deletar
+│   └── index.ts                  # Todos os services (um por operação)
 ├── infra/
 │   ├── database/
-│   │   └── typeorm-modelo.repository.ts   # Implementação real
-│   └── http/
-│       ├── modelo.controller.ts      # Handler HTTP (classe)
-│       └── modelo.routes.ts          # Rotas Express
-└── index.ts                          # Exports
+│   │   ├── schemas/
+│   │   │   └── <Nome>.ts        # Entidade TypeORM
+│   │   └── repositories/
+│   │       └── TypeORM<Nome>sRepository.ts
+│   └── https/
+│       ├── controllers/
+│       │   └── <Nome>sController.ts
+│       └── routes/
+│           └── <nomes>.routes.ts
+└── index.ts                      # Barrel exports do módulo
 ```
 
-### Convenções
+---
 
-- **Nomes de arquivos:** kebab-case (`create-user.dto.ts`)
-- **Nomes de classes:** PascalCase (`CreateService`, `User`)
-- **Nomes de interfaces:** `IPrefixInterface` (`IUserRepository`)
+## 1. Schema TypeORM (`infra/database/schemas/`)
 
-## 🔑 Componentes
-
-### 1️⃣ Entity (Entidade)
-
-Modelo puro de negócio **sem dependências de framework**.
+Entidade que mapeia para a tabela no banco.
 
 ```typescript
-export class User {
-  public id!: string;
-  public name!: string;
-  public email!: string;
-  public passwordHash!: string;
-  public createdAt!: Date;
-  public updatedAt!: Date;
+import { Column, CreateDateColumn, Entity, PrimaryGeneratedColumn, UpdateDateColumn } from "typeorm";
 
-  // Métodos de negócio opcionais
-  public isEmailValid(): boolean {
-    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(this.email);
-  }
+@Entity("products")
+export class Product {
+  @PrimaryGeneratedColumn("uuid")
+  id!: string;
+
+  @Column({ type: "varchar", length: 100 })
+  name!: string;
+
+  @Column({ type: "decimal", precision: 10, scale: 2 })
+  price!: number;
+
+  @CreateDateColumn({ name: "created_at" })
+  createdAt!: Date;
+
+  @UpdateDateColumn({ name: "updated_at" })
+  updatedAt!: Date;
 }
 ```
 
-**Características:**
+---
 
-- Propriedades públicas
-- Sem decoradores (exceto se usar TypeORM)
-- Métodos que validam regras de negócio
+## 2. Interface do Modelo (`interfaces/`)
 
-### 2️⃣ Repository Interface
-
-Define o **contrato** para persistência de dados.
+Interface TypeScript que descreve o modelo de domínio.
 
 ```typescript
-export interface IUserRepository {
-  create(data: Omit<User, "id" | "createdAt" | "updatedAt">): Promise<User>;
-  findAll(query?: FindAllQuery): Promise<User[]>;
-  count(query?: Pick<FindAllQuery, "search">): Promise<number>;
-  findById(id: string, options?: FindOneOptions): Promise<User | null>;
-  findByEmail(email: string): Promise<User | null>;
-  update(user: User): Promise<User>;
-  delete(id: string): Promise<void>;
-}
-
-export interface FindAllQuery {
-  skip?: number;
-  take?: number;
-  sortBy?: string;
-  sortDesc?: boolean;
-  search?: string;
-}
-```
-
-**Benefícios:**
-
-- Service não conhece banco de dados
-- Fácil testar com fake repository
-- Trocar DB sem mexer em service
-
-### 3️⃣ DTOs (Data Transfer Objects)
-
-Validação com Zod + tipo TypeScript.
-
-**Create DTO:**
-
-```typescript
-export const CreateUserSchema = z.object({
-  name: z.string().min(3, "Mínimo 3 caracteres"),
-  email: z.string().email("E-mail inválido"),
-  password: z.string().min(6, "Mínimo 6 caracteres"),
-});
-
-export type CreateUserDTO = z.infer<typeof CreateUserSchema>;
-```
-
-**Update DTO:**
-
-```typescript
-export const UpdateUserSchema = z.object({
-  name: z.string().min(3).optional(),
-  email: z.string().email().optional(),
-});
-
-export type UpdateUserDTO = z.infer<typeof UpdateUserSchema>;
-```
-
-**Response DTO:**
-
-```typescript
-// Nunca expõe passwordHash, tokens, etc
-export interface UserResponseDTO {
+export interface IProduct {
   id: string;
   name: string;
-  email: string;
+  price: number;
   createdAt: Date;
   updatedAt: Date;
 }
 ```
 
-### 4️⃣ Services
+---
 
-**Um service por operação.** Contém toda a lógica de negócio.
+## 3. DTOs (`dtos/`)
+
+Interfaces TypeScript puras — sem dependências externas.
 
 ```typescript
-@injectable()
-export class CreateService {
-  constructor(
-    @inject("UserRepository")
-    private userRepository: IUserRepository,
-  ) {}
+// CreateProductDTO.ts
+export interface CreateProductDTO {
+  name: string;
+  price: number;
+}
 
-  async execute(data: CreateUserDTO): Promise<UserResponseDTO> {
-    // Validação
-    const validation = CreateUserSchema.safeParse(data);
-    if (!validation.success) {
-      throw new BadRequestError(validation.error.errors[0].message);
-    }
+// UpdateProductDTO.ts
+export interface UpdateProductDTO {
+  name?: string;
+  price?: number;
+}
 
-    // Regra de negócio: e-mail duplicado?
-    const existing = await this.userRepository.findByEmail(data.email);
-    if (existing) {
-      throw new ConflictError("E-mail já cadastrado");
-    }
-
-    // Criar
-    const user = new User();
-    user.id = randomUUID();
-    user.name = data.name;
-    user.email = data.email;
-    user.passwordHash = await hash(data.password, 10);
-    user.createdAt = new Date();
-    user.updatedAt = new Date();
-
-    // Persistir
-    const created = await this.userRepository.create(user);
-
-    // Retornar sem dados sensíveis
-    return this.mapToResponse(created);
-  }
-
-  private mapToResponse(user: User): UserResponseDTO {
-    return {
-      id: user.id,
-      name: user.name,
-      email: user.email,
-      createdAt: user.createdAt,
-      updatedAt: user.updatedAt,
-    };
-  }
+// ProductResponseDTO.ts
+export interface ProductResponseDTO {
+  id: string;
+  name: string;
+  price: number;
+  createdAt: Date;
+  updatedAt: Date;
 }
 ```
 
-**Padrão de error handling:**
+---
 
-| Service | Erros Típicos                                                   |
-| ------- | --------------------------------------------------------------- |
-| FindAll | —                                                               |
-| FindOne | NotFoundError (404)                                             |
-| Create  | BadRequestError (400), ConflictError (409)                      |
-| Update  | BadRequestError (400), NotFoundError (404), ConflictError (409) |
-| Delete  | NotFoundError (404)                                             |
+## 4. Interface do Repositório (`repositories/`)
 
-### 5️⃣ Repository Implementation
-
-Implementação concreta (TypeORM, Prisma, ou in-memory).
+Contrato agnóstico ao banco de dados. Services dependem apenas desta interface.
 
 ```typescript
-@injectable()
-export class InMemoryUserRepository implements IUserRepository {
-  private users: Map<string, User> = new Map();
+import { Product } from "@modules/products/infra/database/schemas/Product";
 
-  async create(data: Omit<User, "id" | "createdAt" | "updatedAt">): Promise<User> {
-    const user = { ...data, id: randomUUID(), createdAt: new Date(), updatedAt: new Date() };
-    this.users.set(user.id, user);
-    return user;
+export interface FindAllQuery {
+  skip?: number;
+  take?: number;
+  search?: string;
+  sortBy?: string;
+  sortDesc?: boolean;
+}
+
+export interface IProductsRepository {
+  create(data: Omit<Product, "id" | "createdAt" | "updatedAt">): Promise<Product>;
+  findAll(query?: FindAllQuery): Promise<Product[]>;
+  count(query?: Pick<FindAllQuery, "search">): Promise<number>;
+  findById(id: string): Promise<Product | null>;
+  update(product: Product): Promise<Product>;
+  delete(id: string): Promise<void>;
+}
+```
+
+---
+
+## 5. Implementação TypeORM (`infra/database/repositories/`)
+
+```typescript
+import { injectable } from "tsyringe";
+import { Repository } from "typeorm";
+import { appDataSource } from "@infra/database/DataSource";
+import { FindAllQuery, IProductsRepository } from "@modules/products/repositories/IProductsRepository";
+import { Product } from "../schemas/Product";
+
+@injectable()
+export class TypeORMProductsRepository implements IProductsRepository {
+  private repository: Repository<Product>;
+
+  constructor() {
+    this.repository = appDataSource!.getRepository(Product);
   }
 
-  async findAll(query?: FindAllQuery): Promise<User[]> {
-    let users = Array.from(this.users.values());
+  async create(data: Omit<Product, "id" | "createdAt" | "updatedAt">): Promise<Product> {
+    const product = this.repository.create(data);
+    return this.repository.save(product);
+  }
 
+  async findAll(query?: FindAllQuery): Promise<Product[]> {
+    const qb = this.repository.createQueryBuilder("product");
     if (query?.search) {
-      const search = query.search.toLowerCase();
-      users = users.filter((u) => u.name.toLowerCase().includes(search));
+      qb.where("product.name ILIKE :search", { search: `%${query.search}%` });
     }
-
-    if (query?.sortBy) {
-      users.sort((a, b) => {
-        const aVal = a[query.sortBy as keyof User];
-        const bVal = b[query.sortBy as keyof User];
-        return aVal < bVal ? (query.sortDesc ? 1 : -1) : aVal > bVal ? (query.sortDesc ? -1 : 1) : 0;
-      });
-    }
-
-    const skip = query?.skip || 0;
-    const take = query?.take || 10;
-    return users.slice(skip, skip + take);
+    if (query?.sortBy) qb.orderBy(`product.${query.sortBy}`, query.sortDesc ? "DESC" : "ASC");
+    if (query?.skip) qb.skip(query.skip);
+    if (query?.take) qb.take(query.take);
+    return qb.getMany();
   }
 
   async count(query?: Pick<FindAllQuery, "search">): Promise<number> {
-    // Count com filtro
+    const qb = this.repository.createQueryBuilder("product");
+    if (query?.search) {
+      qb.where("product.name ILIKE :search", { search: `%${query.search}%` });
+    }
+    return qb.getCount();
   }
 
-  async findById(id: string): Promise<User | null> {
-    return this.users.get(id) || null;
+  async findById(id: string): Promise<Product | null> {
+    return this.repository.findOneBy({ id });
   }
 
-  async update(user: User): Promise<User> {
-    this.users.set(user.id, user);
-    return user;
+  async update(product: Product): Promise<Product> {
+    return this.repository.save(product);
   }
 
   async delete(id: string): Promise<void> {
-    this.users.delete(id);
+    await this.repository.delete(id);
   }
 }
 ```
 
-### 6️⃣ Controller
+---
 
-**Classe** com um método por ação. Apenas converte HTTP ↔ Service.
+## 6. Services (`services/index.ts`)
+
+**Um service por operação.** Toda regra de negócio fica aqui.
 
 ```typescript
-export default class UsersController {
-  public async findAll(req: Request, res: Response): Promise<Response> {
-    const service = container.resolve(FindAllService);
-    const query = { skip: req.query.skip, take: req.query.take, search: req.query.search };
-    const result = await service.execute(query);
+import { inject, injectable } from "tsyringe";
+import { ConflictError, NotFoundError } from "@core/errors/AppError";
+import { CreateProductDTO } from "@modules/products/dtos/CreateProductDTO";
+import { UpdateProductDTO } from "@modules/products/dtos/UpdateProductDTO";
+import { ProductResponseDTO } from "@modules/products/dtos/ProductResponseDTO";
+import { FindAllQuery, IProductsRepository } from "@modules/products/repositories/IProductsRepository";
+
+@injectable()
+export class CreateProductService {
+  constructor(
+    @inject("ProductsRepository")
+    private productsRepository: IProductsRepository,
+  ) {}
+
+  async execute(data: CreateProductDTO): Promise<ProductResponseDTO> {
+    // Regras de negócio aqui (sem Zod — validação na camada HTTP se necessário)
+    const product = await this.productsRepository.create(data);
+    return product;
+  }
+}
+
+@injectable()
+export class FindAllProductsService {
+  constructor(
+    @inject("ProductsRepository")
+    private productsRepository: IProductsRepository,
+  ) {}
+
+  async execute(query?: FindAllQuery): Promise<{ data: ProductResponseDTO[]; total: number }> {
+    const [data, total] = await Promise.all([
+      this.productsRepository.findAll(query),
+      this.productsRepository.count({ search: query?.search }),
+    ]);
+    return { data, total };
+  }
+}
+
+@injectable()
+export class FindOneProductService {
+  constructor(
+    @inject("ProductsRepository")
+    private productsRepository: IProductsRepository,
+  ) {}
+
+  async execute(id: string): Promise<ProductResponseDTO> {
+    const product = await this.productsRepository.findById(id);
+    if (!product) throw new NotFoundError("Produto não encontrado.");
+    return product;
+  }
+}
+
+@injectable()
+export class UpdateProductService {
+  constructor(
+    @inject("ProductsRepository")
+    private productsRepository: IProductsRepository,
+  ) {}
+
+  async execute(id: string, data: UpdateProductDTO): Promise<ProductResponseDTO> {
+    const product = await this.productsRepository.findById(id);
+    if (!product) throw new NotFoundError("Produto não encontrado.");
+    if (data.name !== undefined) product.name = data.name;
+    if (data.price !== undefined) product.price = data.price;
+    return this.productsRepository.update(product);
+  }
+}
+
+@injectable()
+export class DeleteProductService {
+  constructor(
+    @inject("ProductsRepository")
+    private productsRepository: IProductsRepository,
+  ) {}
+
+  async execute(id: string): Promise<void> {
+    const product = await this.productsRepository.findById(id);
+    if (!product) throw new NotFoundError("Produto não encontrado.");
+    await this.productsRepository.delete(id);
+  }
+}
+```
+
+---
+
+## 7. Controller (`infra/https/controllers/`)
+
+Responsabilidade única: converter HTTP ↔ Service.
+
+```typescript
+import { Request, Response } from "express";
+import { container } from "tsyringe";
+import {
+  CreateProductService,
+  DeleteProductService,
+  FindAllProductsService,
+  FindOneProductService,
+  UpdateProductService,
+} from "@modules/products/services";
+
+export class ProductsController {
+  async findAll(req: Request, res: Response): Promise<Response> {
+    const { skip, take, search, sortBy, sortDesc } = req.query;
+    const service = container.resolve(FindAllProductsService);
+    const result = await service.execute({
+      skip: skip ? Number(skip) : undefined,
+      take: take ? Number(take) : undefined,
+      search: search as string | undefined,
+      sortBy: sortBy as string | undefined,
+      sortDesc: sortDesc === "true",
+    });
     return res.json(result);
   }
 
-  public async create(req: Request, res: Response): Promise<Response> {
-    const service = container.resolve(CreateService);
-    const result = await service.execute(req.body);
-    return res.status(201).json(result);
+  async findOne(req: Request, res: Response): Promise<Response> {
+    const service = container.resolve(FindOneProductService);
+    return res.json(await service.execute(req.params.id));
   }
 
-  public async update(req: Request, res: Response): Promise<Response> {
-    const service = container.resolve(UpdateService);
-    const result = await service.execute(req.params.id, req.body);
-    return res.json(result);
+  async create(req: Request, res: Response): Promise<Response> {
+    const service = container.resolve(CreateProductService);
+    return res.status(201).json(await service.execute(req.body));
   }
 
-  public async delete(req: Request, res: Response): Promise<Response> {
-    const service = container.resolve(DeleteService);
+  async update(req: Request, res: Response): Promise<Response> {
+    const service = container.resolve(UpdateProductService);
+    return res.json(await service.execute(req.params.id, req.body));
+  }
+
+  async delete(req: Request, res: Response): Promise<Response> {
+    const service = container.resolve(DeleteProductService);
     await service.execute(req.params.id);
     return res.status(204).send();
   }
 }
 ```
 
-### 7️⃣ Routes
+---
 
-Rotas Express com `.bind()` para manter o contexto.
-
-```typescript
-const router = Router();
-const controller = new UsersController();
-
-router.get("/", controller.findAll.bind(controller));
-router.get("/:id", controller.findOne.bind(controller));
-router.post("/", controller.create.bind(controller));
-router.patch("/:id", controller.update.bind(controller));
-router.delete("/:id", controller.delete.bind(controller));
-
-export { router as usersRouter };
-```
-
-## 🔗 Registrar no Servidor
-
-Em [backend/src/infra/http/server.ts](../backend/src/infra/http/server.ts):
+## 8. Rotas (`infra/https/routes/`)
 
 ```typescript
-import { usersRouter } from "@modules/users";
+import { Router } from "express";
+import { ProductsController } from "../controllers/ProductsController";
 
-app.use("/api/users", usersRouter);
+const productsRouter = Router();
+const controller = new ProductsController();
+
+productsRouter.get("/", controller.findAll.bind(controller));
+productsRouter.get("/:id", controller.findOne.bind(controller));
+productsRouter.post("/", controller.create.bind(controller));
+productsRouter.patch("/:id", controller.update.bind(controller));
+productsRouter.delete("/:id", controller.delete.bind(controller));
+
+export { productsRouter };
 ```
 
-## 🚀 Fluxo de uma Requisição
+---
 
-### POST /api/users (Criar)
+## 9. Container do Módulo (`container/index.ts`)
 
-1. **Client** envia `{ name, email, password }`
-2. **Router** chama `UsersController.create()`
-3. **Controller** extrai `req.body` e chama `CreateService.execute()`
-4. **Service**:
-   - Valida com Zod → lança `BadRequestError` se inválido (400)
-   - Verifica duplicata → lança `ConflictError` (409)
-   - Hash da senha
-   - Chama `repository.create()`
-5. **Repository** persiste no banco
-6. **Service** mapeia `User` → `UserResponseDTO`
-7. **Controller** retorna `201` com JSON
-8. **errorHandler** (se erro) captura e retorna `{ error: message }` com statusCode
+```typescript
+import "reflect-metadata";
+import { container } from "tsyringe";
+import { IProductsRepository } from "@modules/products/repositories/IProductsRepository";
+import { TypeORMProductsRepository } from "@modules/products/infra/database/repositories/TypeORMProductsRepository";
 
-## 📋 Checklist para Novo Módulo
+container.registerSingleton<IProductsRepository>("ProductsRepository", TypeORMProductsRepository);
+```
 
-- [ ] Criar entidade em `entities/`
-- [ ] Criar interface em `repositories/`
-- [ ] Criar DTOs em `dtos/`
-- [ ] Criar services em `services/` (um por operação)
-- [ ] Criar repositório em `infra/database/`
-- [ ] Criar controller em `infra/http/`
-- [ ] Criar rotas em `infra/http/`
-- [ ] Criar `index.ts` com exports
-- [ ] Registrar no container de DI
-- [ ] Registrar rotas no `server.ts`
-- [ ] Testar com cURL ou Postman
+---
+
+## 10. Registrar no Servidor
+
+### Em `src/infra/https/routes/routes.ts`
+
+```typescript
+import { Router } from "express";
+import { productsRouter } from "@modules/products/infra/https/routes/products.routes";
+
+const routes = Router();
+
+routes.use("/products", productsRouter);
+
+export default routes;
+```
+
+### Em `src/server.ts`
+
+```typescript
+import "@modules/products/container"; // Registra DI do módulo
+```
+
+---
+
+## ✅ Checklist: Novo Módulo
+
+- [ ] `infra/database/schemas/<Nome>.ts` — entidade TypeORM
+- [ ] `interfaces/I<Nome>.ts` — interface do modelo
+- [ ] `dtos/Create<Nome>DTO.ts`, `Update<Nome>DTO.ts`, `<Nome>ResponseDTO.ts`
+- [ ] `repositories/I<Nome>sRepository.ts` — contrato
+- [ ] `infra/database/repositories/TypeORM<Nome>sRepository.ts` — implementação
+- [ ] `services/index.ts` — services (Create, FindAll, FindOne, Update, Delete)
+- [ ] `infra/https/controllers/<Nome>sController.ts`
+- [ ] `infra/https/routes/<nomes>.routes.ts`
+- [ ] `container/index.ts` — binding DI
+- [ ] `index.ts` — barrel exports
+- [ ] Registrar rota em `infra/https/routes/routes.ts`
+- [ ] Importar container em `server.ts`
+
+---
 
 ## 💡 Dicas
 
-1. **Sempre use interfaces** - fácil mockar para testes
-2. **Um service por operação** - cada service é pequeno e focado
-3. **Mapear DTO na response** - nunca expor campos sensíveis
-4. **Validar com Zod** - type-safe em runtime
-5. **Usar AppError** - statusCode automático
-
-## 📚 Exemplo Completo
-
-Veja [backend/src/modules/users/](../backend/src/modules/users/) para um exemplo funcional do padrão CRUD.
+- **Services:** sempre verificar existência antes de update/delete → `NotFoundError`
+- **Conflitos:** verificar unicidade antes de criar → `ConflictError`
+- **DTOs:** jamais retornar campos sensíveis (ex: `passwordHash`)
+- **Alias:** use `@core/*`, `@infra/*`, `@modules/*` — nunca imports relativos longos
+- **Container:** registrar sempre como `registerSingleton` para repositórios

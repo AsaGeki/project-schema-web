@@ -1,381 +1,238 @@
-# ⚠️ Error Handling
+# ❌ Tratamento de Erros
 
-Guia completo sobre tratamento de erros estruturado.
-
-**Referência:** [universal/PADRAO-ERROS.md](../universal/PADRAO-ERROS.md)
+Sistema de erros estruturado baseado em classes, integrado ao Express via `errorMiddleware`.
 
 ## 🏗️ Arquitetura
 
 ```
-┌─────────────────────────┐
-│ Service/Route lança erro│
-└────────┬────────────────┘
-         │
-    ┌────▼─────────────────────────┐
-    │ Express passa para middleware │
-    │ next(error)                   │
-    └────┬─────────────────────────┘
-         │
-         │ instanceof AppError?
-    ┌────▼──────────────┐
-    │ SIM: Retorna com  │
-    │ statusCode correto│
-    │ { error: msg }    │
-    └───────────────────┘
-         │
-    ┌────▼──────────────┐
-    │ NÃO: Log + 500    │
-    │ { error: texto }  │
-    └───────────────────┘
+Service lança AppError (ou subclasse)
+         ↓
+express-async-errors captura e passa para next(error)
+         ↓
+errorMiddleware (último middleware do Express)
+   ├─ instanceof AppError? → res.status(err.statusCode).json(...)
+   └─ Erro desconhecido? → log.error + res.status(500)
 ```
 
-## 📦 Classe Base: AppError
+## 📁 Localização
 
-Todas as exceções customizadas estendem `AppError`.
+- **Classes de erro:** `src/core/errors/AppError.ts`
+- **Middleware:** `src/core/middlewares/errorMiddleware.ts`
+
+---
+
+## Classes de Erro
+
+### `AppError` — Classe Base
 
 ```typescript
+export interface IAppErrorOptions {
+  message?: string;
+  title?: string;
+  details?: unknown;
+  isOperational?: boolean;
+}
+
+type ErrorInput = string | IAppErrorOptions;
+
 export class AppError extends Error {
-  constructor(
-    public message: string,
-    public statusCode: number = 400,
-  ) {
-    super(message);
-    this.name = "AppError";
-    Object.setPrototypeOf(this, AppError.prototype);
-  }
+  public readonly statusCode: number;
+  public readonly title?: string;
+  public readonly details?: unknown;
+  public readonly isOperational: boolean;
+  public readonly originFile?: string; // arquivo que lançou o erro (extraído da stack)
+
+  constructor(input: ErrorInput, defaultStatusCode: number = 500) { ... }
 }
 ```
 
-**Por que `Object.setPrototypeOf`?**
-
-Garante que `instanceof AppError` funciona mesmo após serialização (em Node.js).
-
-## 🔴 Erros HTTP
-
-Cada classe corresponde a um status code HTTP:
-
-| Classe                     | Status | Quando Usar                               |
-| -------------------------- | ------ | ----------------------------------------- |
-| `BadRequestError`          | 400    | Dados inválidos, validação Zod            |
-| `UnauthorizedError`        | 401    | Sem autenticação (token ausente/inválido) |
-| `ForbiddenError`           | 403    | Autenticado mas sem permissão             |
-| `NotFoundError`            | 404    | Recurso não encontrado                    |
-| `ConflictError`            | 409    | Conflito (ex.: e-mail duplicado)          |
-| `UnprocessableEntityError` | 422    | Entidade não processável                  |
-| `TooManyRequestsError`     | 429    | Rate limit excedido                       |
-| `InternalServerError`      | 500    | Erro inesperado (fallback)                |
-
-## 💻 Implementação
-
-Disponível em [backend/src/shared/errors/index.ts](../backend/src/shared/errors/index.ts):
+**Dois modos de uso:**
 
 ```typescript
-export class BadRequestError extends AppError {
-  constructor(message: string = "Requisição inválida.") {
-    super(message, 400);
-    this.name = "BadRequestError";
-    Object.setPrototypeOf(this, BadRequestError.prototype);
-  }
-}
+// Simples (string)
+throw new NotFoundError("Usuário não encontrado.");
 
-export class UnauthorizedError extends AppError {
-  constructor(message: string = "Não autorizado.") {
-    super(message, 401);
-    this.name = "UnauthorizedError";
-    Object.setPrototypeOf(this, UnauthorizedError.prototype);
-  }
-}
-
-export class NotFoundError extends AppError {
-  constructor(message: string = "Registro não encontrado.") {
-    super(message, 404);
-    this.name = "NotFoundError";
-    Object.setPrototypeOf(this, NotFoundError.prototype);
-  }
-}
-
-export class ConflictError extends AppError {
-  constructor(message: string = "Conflito com o estado atual.") {
-    super(message, 409);
-    this.name = "ConflictError";
-    Object.setPrototypeOf(this, ConflictError.prototype);
-  }
-}
-
-export class UnprocessableEntityError extends AppError {
-  constructor(message: string = "Entidade não processável.") {
-    super(message, 422);
-    this.name = "UnprocessableEntityError";
-    Object.setPrototypeOf(this, UnprocessableEntityError.prototype);
-  }
-}
-
-export class TooManyRequestsError extends AppError {
-  constructor(message: string = "Muitas requisições. Tente novamente mais tarde.") {
-    super(message, 429);
-    this.name = "TooManyRequestsError";
-    Object.setPrototypeOf(this, TooManyRequestsError.prototype);
-  }
-}
-
-export class InternalServerError extends AppError {
-  constructor(message: string = "Erro interno do servidor.") {
-    super(message, 500);
-    this.name = "InternalServerError";
-    Object.setPrototypeOf(this, InternalServerError.prototype);
-  }
-}
+// Detalhado (objeto)
+throw new BadRequestError({
+  message: "Dados inválidos.",
+  title: "Erro de validação",
+  details: { field: "email", reason: "formato inválido" },
+});
 ```
 
-## 🎯 Como Usar nos Services
+---
 
-### Validação com Zod
+## Tabela de Erros
 
-```typescript
-const validation = CreateUserSchema.safeParse(data);
-if (!validation.success) {
-  const firstError = validation.error.errors[0];
-  throw new BadRequestError(firstError.message);
-}
-```
+| Classe                     | Status | Quando usar                            |
+| -------------------------- | ------ | -------------------------------------- |
+| `BadRequestError`          | 400    | Dados inválidos, formato incorreto     |
+| `UnauthorizedError`        | 401    | Token ausente ou inválido              |
+| `ForbiddenError`           | 403    | Autenticado mas sem permissão          |
+| `NotFoundError`            | 404    | Recurso não encontrado                 |
+| `ConflictError`            | 409    | E-mail/recurso duplicado               |
+| `UnprocessableEntityError` | 422    | Regra de negócio não atendida          |
+| `TooManyRequestsError`     | 429    | Rate limit excedido                    |
+| `InternalServerError`      | 500    | Erro inesperado (isOperational: false) |
 
-### Verificar se recurso existe
+---
 
-```typescript
-const user = await this.userRepository.findById(id);
-if (!user) {
-  throw new NotFoundError("Usuário não encontrado");
-}
-```
-
-### Conflito (duplicata)
-
-```typescript
-const existing = await this.userRepository.findByEmail(data.email);
-if (existing) {
-  throw new ConflictError("E-mail já cadastrado");
-}
-```
-
-### Regra de negócio
-
-```typescript
-if (user.role !== "admin") {
-  throw new ForbiddenError("Apenas admins podem fazer isso");
-}
-```
-
-### Autenticação
-
-```typescript
-if (!token) {
-  throw new UnauthorizedError("Token ausente");
-}
-
-if (!isTokenValid(token)) {
-  throw new UnauthorizedError("Token inválido ou expirado");
-}
-```
-
-## 🚨 Global Error Handler
-
-Middleware registrado **por último** no Express:
-
-```typescript
-export const errorHandler = (err: Error, _req: Request, res: Response, _next: NextFunction) => {
-  // AppError → responder com statusCode correto
-  if (err instanceof AppError) {
-    return res.status(err.statusCode).json({ error: err.message });
-  }
-
-  // Erro desconhecido → logar e retornar 500
-  logger.error({
-    err,
-    message: err.message,
-    stack: err.stack,
-  });
-
-  return res.status(500).json({
-    error: "Erro interno do servidor",
-    // Expor mensagem apenas em desenvolvimento
-    ...(process.env.NODE_ENV === "development" && { message: err.message }),
-  });
-};
-```
-
-**Registro no servidor:**
-
-```typescript
-// Deve ser o ÚLTIMO middleware
-app.use(errorHandler);
-```
-
-## 📋 Exemplo Completo
-
-### Service com múltiplas validações
+## Uso nos Services
 
 ```typescript
 @injectable()
 export class UpdateService {
-  constructor(
-    @inject("UserRepository")
-    private userRepository: IUserRepository,
-  ) {}
+  constructor(@inject("UsersRepository") private usersRepository: IUsersRepository) {}
 
   async execute(id: string, data: UpdateUserDTO): Promise<UserResponseDTO> {
-    // Validação 1: Dados inválidos
-    const validation = UpdateUserSchema.safeParse(data);
-    if (!validation.success) {
-      throw new BadRequestError(validation.error.errors[0].message);
-    }
+    // 1. Recurso existe?
+    const user = await this.usersRepository.findById(id);
+    if (!user) throw new NotFoundError("Usuário não encontrado.");
 
-    // Validação 2: Recurso não encontrado
-    const user = await this.userRepository.findById(id);
-    if (!user) {
-      throw new NotFoundError("Usuário não encontrado");
-    }
-
-    // Validação 3: Conflito (e-mail duplicado)
+    // 2. Conflito de unicidade?
     if (data.email && data.email !== user.email) {
-      const existingUser = await this.userRepository.findByEmail(data.email);
-      if (existingUser) {
-        throw new ConflictError("E-mail já cadastrado");
-      }
+      const conflict = await this.usersRepository.findByEmail(data.email);
+      if (conflict) throw new ConflictError("E-mail já em uso.");
+      user.email = data.email;
     }
 
-    // Lógica de negócio...
     if (data.name) user.name = data.name;
-    if (data.email) user.email = data.email;
-    user.updatedAt = new Date();
 
-    const updated = await this.userRepository.update(user);
-    return this.mapToResponse(updated);
+    const updated = await this.usersRepository.update(user);
+    const { passwordHash: _, ...response } = updated;
+    return response as UserResponseDTO;
   }
 }
 ```
 
-### Respostas HTTP
+---
 
-**Requisição bem-sucedida:**
+## `errorMiddleware`
 
-```bash
-GET /api/users/123
-→ 200 OK
-{
-  "id": "123",
-  "name": "João",
-  "email": "joao@example.com",
-  "createdAt": "2026-02-21T10:00:00Z",
-  "updatedAt": "2026-02-21T10:00:00Z"
-}
-```
-
-**Erro 400 - Dados inválidos:**
-
-```bash
-POST /api/users
-{ "name": "João", "email": "invalido", "password": "123" }
-→ 400 Bad Request
-{
-  "error": "E-mail inválido"
-}
-```
-
-**Erro 404 - Não encontrado:**
-
-```bash
-GET /api/users/999
-→ 404 Not Found
-{
-  "error": "Registro não encontrado"
-}
-```
-
-**Erro 409 - Conflito:**
-
-```bash
-POST /api/users
-{ "name": "João", "email": "joao@example.com", "password": "senha123" }
-(e-mail já existe)
-→ 409 Conflict
-{
-  "error": "E-mail já cadastrado"
-}
-```
-
-**Erro 500 - Servidor:**
-
-```bash
-GET /api/users
-(database crash)
-→ 500 Internal Server Error
-{
-  "error": "Erro interno do servidor"
-}
-```
-
-## 🔐 Boas Práticas
-
-### ✅ DO's (Faça)
+**Deve ser o último `app.use()` registrado no Express.**
 
 ```typescript
-// Mensagens descritivas
-throw new NotFoundError('Usuário com ID 123 não encontrado');
+import { AppError } from "@core/errors/AppError";
+import { logger } from "@core/utils/logger";
+import { ErrorRequestHandler } from "express";
 
-// Contexto específico
-throw new BadRequestError('E-mail deve ter domínio válido');
+const log = logger.child({ prefix: "error" });
 
-// Erro correto por operação
-if (!user) throw new NotFoundError(...);
-if (duplicate) throw new ConflictError(...);
-if (invalid) throw new BadRequestError(...);
-```
+export const errorMiddleware: ErrorRequestHandler = (error, req, res, next) => {
+  if (res.headersSent) return next(error);
 
-### ❌ DON'Ts (Não faça)
+  if (error instanceof AppError) {
+    log.warn(error.message, {
+      method: req.method,
+      path: req.path,
+      statusCode: error.statusCode,
+      originFile: error.originFile,
+      title: error.title,
+      details: error.details,
+    });
 
-```typescript
-// Mensagens genéricas
-throw new BadRequestError("Erro");
+    return res.status(error.statusCode).json({
+      success: false,
+      title: error.title ?? "Erro na requisição",
+      message: error.message,
+      details: error.details ?? null,
+    });
+  }
 
-// Expor stack trace ao cliente
-throw new Error(error.stack);
+  // Erros desconhecidos (bugs)
+  log.error("Erro interno do servidor.", { method: req.method, path: req.path, error });
 
-// Status code genérico
-return res.status(400).json({ error });
-
-// Sem log em erros inesperados
-throw new Error("Falhou");
-```
-
-## 🧪 Testando Erros
-
-```typescript
-import { describe, it, expect } from "vitest";
-import { CreateService } from "./create.service";
-import { BadRequestError, ConflictError } from "@shared/errors";
-
-describe("CreateService", () => {
-  it("deve lançar BadRequestError se e-mail inválido", async () => {
-    const service = new CreateService(repository);
-
-    expect(() => service.execute({ name: "João", email: "invalido", password: "123" })).rejects.toThrow(
-      BadRequestError,
-    );
+  return res.status(500).json({
+    success: false,
+    title: "Erro interno do servidor",
+    message: "Ocorreu um erro interno.",
   });
+};
+```
 
-  it("deve lançar ConflictError se e-mail já existe", async () => {
-    const service = new CreateService(repository);
+---
 
-    expect(() => service.execute({ name: "João", email: "existente@example.com", password: "123" })).rejects.toThrow(
-      ConflictError,
-    );
-  });
+## Formato das Respostas HTTP
+
+### Erro operacional (ex: 404)
+
+```json
+{
+  "success": false,
+  "title": "Erro na requisição",
+  "message": "Usuário não encontrado.",
+  "details": null
+}
+```
+
+### Erro com detalhes (ex: 400)
+
+```json
+{
+  "success": false,
+  "title": "Erro de validação",
+  "message": "Dados inválidos.",
+  "details": { "field": "email", "reason": "formato inválido" }
+}
+```
+
+### Erro interno (500)
+
+```json
+{
+  "success": false,
+  "title": "Erro interno do servidor",
+  "message": "Ocorreu um erro interno."
+}
+```
+
+---
+
+## Como Registrar
+
+Em `src/infra/https/app.ts`, o `errorMiddleware` deve ser adicionado **depois de todas as rotas**:
+
+```typescript
+export class App {
+  constructor() {
+    this.server = express();
+    this.middlewares(); // helmet, cors, json, logMiddleware
+    this.routes(); // rotas dos módulos
+    this.errorMiddleware(); // SEMPRE POR ÚLTIMO
+  }
+
+  private errorMiddleware(): void {
+    this.server.use(errorMiddleware);
+  }
+}
+```
+
+---
+
+## `express-async-errors`
+
+O pacote `express-async-errors` (importado em `app.ts`) faz o Express capturar automaticamente erros lançados dentro de handlers `async`. Sem ele, seria necessário fazer:
+
+```typescript
+// Sem express-async-errors (verboso)
+router.post("/", async (req, res, next) => {
+  try {
+    const result = await service.execute(req.body);
+    res.json(result);
+  } catch (err) {
+    next(err); // necessário manualmente
+  }
+});
+
+// Com express-async-errors (limpo)
+router.post("/", async (req, res) => {
+  const result = await service.execute(req.body); // erros capturados automaticamente
+  res.json(result);
 });
 ```
 
-## 📚 Referências
+---
 
-- [Implementação](../backend/src/shared/errors/index.ts)
-- [Handler Global](../backend/src/infra/http/middlewares/errorHandler.ts)
-- [HTTP Status Codes](https://developer.mozilla.org/en-US/docs/Web/HTTP/Status)
-- [REST API Error Handling Best Practices](https://www.rfc-editor.org/rfc/rfc9110.html)
+## `originFile`
+
+O campo `originFile` na resposta interna do log indica o arquivo exato que lançou o erro, extraído automaticamente da stack trace. Muito útil para debug em produção sem stack trace exposta ao cliente.

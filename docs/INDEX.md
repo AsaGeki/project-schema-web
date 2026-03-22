@@ -8,6 +8,8 @@ Bem-vindo à documentação do Universal Base Project! Aqui você encontra guias
 2. **[Padrão CRUD](crud.md)** - Como criar novos módulos
 3. **[Tratamento de Erros](error-handling.md)** - Classes AppError e handler global
 
+> **Stack atual:** Node.js + Express + TypeScript + TypeORM + PostgreSQL + Winston + tsyringe
+
 ## 📖 Guias Específicos
 
 ### 🔙 Backend
@@ -18,27 +20,27 @@ Bem-vindo à documentação do Universal Base Project! Aqui você encontra guias
   - Controllers e Rotas
   - Exemplo prático com Users
 
-- **[Logger](logger.md)** - Pino Logger estruturado
+- **[Logger](logger.md)** - Winston Logger estruturado
   - Configuração por ambiente
-  - Níveis de log
+  - Níveis customizados (error/notice/warn/info/debug)
   - HTTP request logging
-  - Boas práticas
+  - Boas práticas e child loggers
 
 - **[Middlewares](middlewares.md)** - HTTP middlewares Express
-  - httpLogger (logging de requisições)
-  - errorHandler (tratamento global de erros)
+  - logMiddleware (logging de requisições)
+  - errorMiddleware (tratamento global de erros)
   - Middlewares de segurança (Helmet, CORS, Rate Limit)
 
 - **[Injeção de Dependência](dependency-injection.md)** - tsyringe Container
   - Registrar dependências
   - @injectable decorator
   - @inject decorator
-  - Tipos de registro (singleton, transient, factory)
+  - Container por módulo (`modules/*/container/index.ts`)
 
 - **[Tratamento de Erros](error-handling.md)** - Erros estruturados
   - Classe base AppError
   - Erros específicos por status HTTP
-  - Global error handler
+  - Global errorMiddleware
   - Padrões de uso nos services
 
 ### 🎨 Frontend
@@ -65,11 +67,12 @@ Exemplo completo de um módulo CRUD implementado:
 
 **Contém:**
 
-- Entity (User)
-- Repository interface (IUserRepository)
-- DTOs (Create, Update, Response)
+- Schema TypeORM (User entity)
+- Repository interface (IUsersRepository)
+- DTOs TypeScript puras (Create, Update, Response)
 - 5 Services (FindAll, FindOne, Create, Update, Delete)
-- In-memory repository (implementação fake)
+- TypeORM repository implementation
+- Container de DI do módulo
 - Controller (como classe)
 - Routes (Express)
 
@@ -167,4 +170,4 @@ Se tiver dúvidas sobre:
 
 ---
 
-**Última atualização:** Fevereiro 2026
+**Última atualização:** Março 2026

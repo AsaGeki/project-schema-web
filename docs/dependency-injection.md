@@ -1,276 +1,117 @@
-# 💉 Injeção de Dependência (Container)
+# 💉 Injeção de Dependência
 
-Documentação sobre como usar tsyringe para IoC (Inversão de Controle).
+Sistema de DI baseado em **tsyringe** com decoradores TypeScript.
 
-## 🎯 O Que É?
+## Conceito
 
-**Injeção de Dependência (DI)** permite que uma classe não precise **instanciar** suas dependências. O **container** faz isso automaticamente.
-
-### Antes (sem DI)
+Em vez de instanciar dependências manualmente (`new Repository()`), o container resolve automaticamente. Isso desacopla as camadas e facilita os testes.
 
 ```typescript
+// ❌ Acoplado — TestService instancia diretamente
 class CreateService {
-  private userRepository: IUserRepository;
-
-  constructor() {
-    // ❌ Acoplado! CreateService conhece InMemoryUserRepository
-    this.userRepository = new InMemoryUserRepository();
-  }
-
-  async execute(data: CreateUserDTO) {
-    // ...
-  }
+  private repo = new TypeORMUsersRepository(); // concreto, difícil testar
 }
-```
 
-**Problema:** Se quiser trocar o repositório (ex.: TypeORM), precisa alterar CreateService.
-
-### Depois (com DI)
-
-```typescript
+// ✅ Com DI — depende de abstração
 @injectable()
 class CreateService {
-  constructor(
-    @inject("UserRepository")
-    private userRepository: IUserRepository,
-  ) {}
+  constructor(@inject("UsersRepository") private repo: IUsersRepository) {}
+}
+```
 
-  async execute(data: CreateUserDTO) {
-    // ...
+---
+
+## Setup
+
+### `tsconfig.json`
+
+```json
+{
+  "compilerOptions": {
+    "experimentalDecorators": true,
+    "emitDecoratorMetadata": true
   }
 }
 ```
 
-**Vantagem:** Container resolve automaticamente. CreateService não conhece a implementação real.
-
-## 🔧 Setup
-
-### Instalar
-
-```bash
-npm install tsyringe reflect-metadata
-```
-
-### Registrar em um arquivo que é carregado cedo
+### `server.ts`
 
 ```typescript
-// backend/src/shared/container/index.ts
-import "reflect-metadata";
-import { container } from "tsyringe";
-
-export { container };
+import "reflect-metadata"; // Obrigatório — deve ser o primeiro import
+import "@infra/container"; // Container global
+import "@modules/users/container"; // Container do módulo users
 ```
 
-### Importar no servidor
+---
 
-```typescript
-// backend/src/infra/http/server.ts
-import "@shared/container";
+## Estrutura de Containers
 
-// Agora container está pronto para usar
-```
+O projeto separa os bindings em dois níveis:
 
-## 📝 Usando o Container
+### Container Global (`src/infra/container/index.ts`)
 
-### Passo 1: Registrar Implementações
-
-Em [backend/src/shared/container/index.ts](../backend/src/shared/container/index.ts):
+Para dependências compartilhadas entre módulos (ex: mailer global, cache).
 
 ```typescript
 import "reflect-metadata";
 import { container } from "tsyringe";
 
-// Módulo Users
-import { InMemoryUserRepository, IUserRepository } from "@modules/users";
-
-// Registrar o repositório
-container.registerSingleton<IUserRepository>(
-  "UserRepository", // token/chave
-  InMemoryUserRepository, // implementação
-);
+// Registre aqui dependências compartilhadas entre múltiplos módulos
+// container.registerSingleton<IMailer>('Mailer', NodemailerMailer);
 
 export { container };
 ```
 
-### Passo 2: Marcar Classe como Injectable
+### Container do Módulo (`src/modules/<nome>/container/index.ts`)
+
+Cada módulo registra suas próprias dependências. Importado no `server.ts`.
 
 ```typescript
-import { injectable, inject } from "tsyringe";
-
-@injectable()
-export class CreateService {
-  constructor(
-    @inject("UserRepository")
-    private userRepository: IUserRepository,
-  ) {}
-
-  async execute(data: CreateUserDTO) {
-    // userRepository foi injetado automaticamente!
-    return this.userRepository.create(data);
-  }
-}
-```
-
-### Passo 3: No Controller, Resolver do Container
-
-```typescript
+import "reflect-metadata";
 import { container } from "tsyringe";
+import { IUsersRepository } from "@modules/users/repositories/IUsersRepository";
+import { TypeORMUsersRepository } from "@modules/users/infra/database/repositories/TypeORMUsersRepository";
 
-export default class UsersController {
-  public async create(req: Request, res: Response): Promise<Response> {
-    // Container resolve e injeta automaticamente
-    const service = container.resolve(CreateService);
-    const result = await service.execute(req.body);
-    return res.status(201).json(result);
-  }
-}
+container.registerSingleton<IUsersRepository>("UsersRepository", TypeORMUsersRepository);
 ```
 
-## 🎓 Tipos de Registro
+---
 
-### Singleton (uma instância para toda a app)
+## Os 3 Passos de Uso
+
+### 1. Registrar no container
 
 ```typescript
-container.registerSingleton<IUserRepository>("UserRepository", InMemoryUserRepository);
-
-// Toda resolução retorna a MESMA instância
-const repo1 = container.resolve<IUserRepository>("UserRepository");
-const repo2 = container.resolve<IUserRepository>("UserRepository");
-console.log(repo1 === repo2); // true
+// container/index.ts
+container.registerSingleton<IUsersRepository>("UsersRepository", TypeORMUsersRepository);
 ```
 
-**Use para:** Repositórios, logger, configurações.
-
-### Transient (nova instância cada vez)
+### 2. `@injectable()` na implementação
 
 ```typescript
-container.registerTransient<CreateService>(CreateService);
-
-// Cada resolução cria NOVA instância
-const service1 = container.resolve(CreateService);
-const service2 = container.resolve(CreateService);
-console.log(service1 === service2); // false
-```
-
-**Use para:** Services (um por requisição).
-
-### Factory (você controla a criação)
-
-```typescript
-container.registerSingleton("UserRepository", {
-  useFactory: (resolver) => {
-    const config = resolver.resolve(ConfigService);
-    if (config.database === "postgres") {
-      return new TypeOrmUserRepository();
-    }
-    return new InMemoryUserRepository();
-  },
-});
-```
-
-**Use para:** Lógica customizada na instanciação.
-
-## 🌳 Hierarquia de Dependências
-
-```
-UsersController
-  └─ CreateService
-       └─ IUserRepository (InMemoryUserRepository)
-
-FindAllService
-  └─ IUserRepository (InMemoryUserRepository) ← mesma instância!
-
-UpdateService
-  └─ IUserRepository (InMemoryUserRepository) ← mesma instância!
-```
-
-**Vantagem:** Dados compartilhados entre services (cache, estado).
-
-## 💻 Exemplo Completo
-
-### 1. Interface
-
-```typescript
-// users/repositories/i-user-repository.ts
-export interface IUserRepository {
-  create(data: Omit<User, "id" | "createdAt" | "updatedAt">): Promise<User>;
-  findById(id: string): Promise<User | null>;
+@injectable()
+export class TypeORMUsersRepository implements IUsersRepository {
   // ...
 }
 ```
 
-### 2. Implementação
+### 3. `@inject()` no service
 
 ```typescript
-// users/infra/database/in-memory-user.repository.ts
-import { injectable } from "tsyringe";
-
-@injectable()
-export class InMemoryUserRepository implements IUserRepository {
-  private users: Map<string, User> = new Map();
-
-  async create(data: Omit<User, "id" | "createdAt" | "updatedAt">): Promise<User> {
-    const user = { ...data, id: randomUUID(), createdAt: new Date() };
-    this.users.set(user.id, user);
-    return user;
-  }
-
-  async findById(id: string): Promise<User | null> {
-    return this.users.get(id) || null;
-  }
-}
-```
-
-### 3. Service
-
-```typescript
-// users/services/create.service.ts
-import { injectable, inject } from "tsyringe";
-
 @injectable()
 export class CreateService {
   constructor(
-    @inject("UserRepository")
-    private userRepository: IUserRepository,
+    @inject("UsersRepository")
+    private usersRepository: IUsersRepository,
   ) {}
-
-  async execute(data: CreateUserDTO): Promise<UserResponseDTO> {
-    // userRepository foi injetado automaticamente
-    const created = await this.userRepository.create({
-      name: data.name,
-      email: data.email,
-      passwordHash: await hash(data.password, 10),
-    });
-    return this.mapToResponse(created);
-  }
 }
 ```
 
-### 4. Registrar no Container
+### 4. `container.resolve()` no controller
 
 ```typescript
-// shared/container/index.ts
-import "reflect-metadata";
-import { container } from "tsyringe";
-
-import { InMemoryUserRepository, IUserRepository } from "@modules/users";
-
-// Singleton: mesma instância para toda app
-container.registerSingleton<IUserRepository>("UserRepository", InMemoryUserRepository);
-
-export { container };
-```
-
-### 5. Usar no Controller
-
-```typescript
-// users/infra/http/users.controller.ts
-import { container } from "tsyringe";
-import { CreateService } from "../../services/create.service";
-
-export default class UsersController {
-  public async create(req: Request, res: Response): Promise<Response> {
-    // Container resolve e injeta todas as dependências
+export class UsersController {
+  async create(req: Request, res: Response): Promise<Response> {
     const service = container.resolve(CreateService);
     const result = await service.execute(req.body);
     return res.status(201).json(result);
@@ -278,160 +119,85 @@ export default class UsersController {
 }
 ```
 
-## 🧪 Testando com DI
+---
 
-### Sem DI (manual)
+## Tipos de Registro
 
-```typescript
-describe("CreateService", () => {
-  it("deve criar usuário", async () => {
-    // Precisa instanciar manualmente
-    const fakeRepository = new InMemoryUserRepository();
-    const service = new CreateService(fakeRepository);
-
-    const result = await service.execute({
-      name: "João",
-      email: "joao@example.com",
-      password: "senha123",
-    });
-
-    expect(result.id).toBeDefined();
-  });
-});
-```
-
-### Com DI (mais limpo)
+### `registerSingleton` — mesma instância (use para repositórios)
 
 ```typescript
-describe("CreateService", () => {
-  it("deve criar usuário", async () => {
-    // Container injeta automaticamente
-    const service = container.resolve(CreateService);
-
-    const result = await service.execute({
-      name: "João",
-      email: "joao@example.com",
-      password: "senha123",
-    });
-
-    expect(result.id).toBeDefined();
-  });
-});
+container.registerSingleton<IUsersRepository>("UsersRepository", TypeORMUsersRepository);
+// → mesma instância reutilizada em toda a app
 ```
 
-### Com Mock/Spy
+### `registerTransient` — nova instância por resolução
 
 ```typescript
-describe("CreateService", () => {
-  it("deve chamar repository.create", async () => {
-    // Criar mock do repositório
-    const mockRepository: IUserRepository = {
-      create: vi.fn().mockResolvedValue(mockUser),
-      findByEmail: vi.fn(),
-      // ... outros métodos
-    };
-
-    // Registrar no container
-    container.registerInstance("UserRepository", mockRepository);
-
-    const service = container.resolve(CreateService);
-    await service.execute(data);
-
-    // Verificar se foi chamado
-    expect(mockRepository.create).toHaveBeenCalled();
-  });
-});
+container.register<CreateService>(CreateService, { useClass: CreateService });
+// → nova instância a cada container.resolve()
 ```
 
-## 🔄 Trocar Implementação (ex: Banco de Dados)
-
-### Antes (in-memory)
+### `registerInstance` — instância já criada (use em testes)
 
 ```typescript
-container.registerSingleton<IUserRepository>("UserRepository", InMemoryUserRepository);
+const fakeRepo: IUsersRepository = { create: jest.fn(), ... };
+container.registerInstance<IUsersRepository>('UsersRepository', fakeRepo);
 ```
 
-### Depois (TypeORM)
+---
+
+## Trocar Implementação
+
+A grande vantagem do padrão: para mudar de TypeORM para Prisma, basta alterar o container. Os services não mudam.
 
 ```typescript
-import { TypeOrmUserRepository } from "@modules/users/infra/database/typeorm-user.repository";
+// Antes
+container.registerSingleton<IUsersRepository>("UsersRepository", TypeORMUsersRepository);
 
-container.registerSingleton<IUserRepository>("UserRepository", TypeOrmUserRepository);
+// Depois (sem tocar em nenhum service)
+container.registerSingleton<IUsersRepository>("UsersRepository", PrismaUsersRepository);
 ```
 
-**Nenhuma outra mudança necessária!** Services, controllers, tudo continua igual.
+---
 
-## 📦 Organização
+## Organização por Módulo
 
-Registre tudo no container de uma vez:
+```
+server.ts
+  ↓ import '@infra/container'         → bindings globais
+  ↓ import '@modules/users/container' → bindings de users
+  ↓ import '@modules/orders/container'→ bindings de orders
+```
+
+Cada módulo é responsável por registrar seus próprios bindings. Isso mantém o código organizado e isola responsabilidades.
+
+---
+
+## Armadilhas Comuns
+
+### ❌ Esquecer `reflect-metadata`
 
 ```typescript
-// shared/container/index.ts
-import "reflect-metadata";
-import { container } from "tsyringe";
-
-// Users Module
-import { InMemoryUserRepository, IUserRepository } from "@modules/users";
-
-// Products Module
-import { InMemoryProductRepository, IProductRepository } from "@modules/products";
-
-// Auth Module
-import { JwtAuthService, IAuthService } from "@modules/auth";
-
-// Registrar tudo
-container.registerSingleton<IUserRepository>("UserRepository", InMemoryUserRepository);
-container.registerSingleton<IProductRepository>("ProductRepository", InMemoryProductRepository);
-container.registerSingleton<IAuthService>("AuthService", JwtAuthService);
-
-export { container };
+// server.ts — DEVE ser o primeiro import
+import "reflect-metadata"; // ← sem isso, os decoradores não funcionam
 ```
 
-## ⚠️ Armadilhas
-
-### 1. Esquecer de importar container
+### ❌ Registrar classe concreta sem token
 
 ```typescript
-// ❌ ERRADO - 'reflect-metadata' não foi executado
-export class CreateService {
-  constructor(@inject("UserRepository") private repo: IUserRepository) {}
-}
+// ❌ Errado
+container.registerSingleton(TypeORMUsersRepository);
 
-// ✅ CORRETO - importar antes
-import "@shared/container"; // executa reflect-metadata
+// ✅ Correto — token como string para referenciar a interface
+container.registerSingleton<IUsersRepository>("UsersRepository", TypeORMUsersRepository);
 ```
 
-### 2. Usar classe em vez de interface no registro
+### ❌ Token errado no `@inject`
 
 ```typescript
-// ❌ Registra a classe concrete
-container.registerSingleton(InMemoryUserRepository, InMemoryUserRepository);
+// Container: container.registerSingleton<IUsersRepository>('UsersRepository', ...)
+//                                                           ^^^^^^^^^^^^^^^^
 
-// ✅ Registra com string (mais flexível)
-container.registerSingleton<IUserRepository>("UserRepository", InMemoryUserRepository);
+@inject('UsersRepository') // deve coincidir exatamente
+private usersRepository: IUsersRepository
 ```
-
-### 3. Circular dependencies
-
-```typescript
-// ❌ A depende de B, B depende de A
-class ServiceA {
-  constructor(@inject(ServiceB) private b: ServiceB) {}
-}
-
-class ServiceB {
-  constructor(@inject(ServiceA) private a: ServiceA) {}
-}
-
-// ✅ Use lazy injection
-class ServiceA {
-  constructor(@inject(() => ServiceB) private b: () => ServiceB) {}
-}
-```
-
-## 📚 Referências
-
-- [Implementação](../backend/src/shared/container/index.ts)
-- [Tsyringe Docs](https://github.com/microsoft/tsyringe)
-- [Dependency Injection Pattern](https://martinfowler.com/articles/injection.html)
-- [Exemplo Completo](../backend/src/modules/users/)
