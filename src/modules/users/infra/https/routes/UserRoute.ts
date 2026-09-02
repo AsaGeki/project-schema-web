@@ -9,16 +9,14 @@ import { listQuerySchema } from '@shared/types/pagination';
 const userRoute = Router();
 const controller = new UsersController();
 
-// `bind` mantém o método ligado à instância mesmo passado desreferenciado — sem
-// ele, um controller que use `this` quebraria só em runtime.
 // Cadastro é público; o restante exige token.
-userRoute.post('/', validateSchema(userSchema), controller.create.bind(controller));
+userRoute.post('/', validateSchema(userSchema), controller.create);
 
 userRoute.use(verifyToken);
 
 // Listagem é restrita a admin — a checagem é do FindAllService, não de middleware.
-userRoute.get('/', validateQuery(listQuerySchema), controller.findAll.bind(controller));
-userRoute.put('/:id', validateSchema(userPartialSchema), controller.update.bind(controller));
-userRoute.delete('/:id', controller.delete.bind(controller));
+userRoute.get('/', validateQuery(listQuerySchema), controller.findAll);
+userRoute.put('/:id', validateSchema(userPartialSchema), controller.update);
+userRoute.delete('/:id', controller.delete);
 
 export default userRoute;

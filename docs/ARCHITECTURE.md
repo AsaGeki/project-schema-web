@@ -136,7 +136,7 @@ Regra de papel (`isAdmin`) mora no **service**, não em middleware de rota. `Fin
 3. `infra/prisma/repositories/` ou `infra/mongo/{models,repositories}/` — a implementação, com `filterConfig`.
 4. `services/` — um arquivo por ação.
 5. `infra/https/controllers/<Nome>Controller.ts` — fino.
-6. `infra/https/routes/<Nome>Route.ts` — `new Controller()`, métodos com `.bind(controller)`.
+6. `infra/https/routes/<Nome>Route.ts` — `new Controller()`, métodos registrados diretamente.
 7. `container/index.ts` — registra o token.
 8. Importar o container no `shared/container/index.ts` e a rota no `shared/infra/https/routes/Router.ts`.
 
@@ -148,5 +148,6 @@ Regra de papel (`isAdmin`) mora no **service**, não em middleware de rota. `Fin
 - Erro lançado fora do service (controller e repositório não lançam erro de negócio).
 - Encadeamento de `if (query.x)` num `FindAllService` — isso é `filterConfig`.
 - `refine`/`superRefine` cruzando campos no Zod — regra de negócio é do service.
-- Método de controller registrado sem `.bind(controller)`.
+- Método de controller sem `this: void` registrado na rota sem `.bind(controller)`.
+- `as` para tipar `req.body`, `req.params` ou `res.locals` — isso é genérico de `Request`/`Response`.
 - Service genérico que faz várias ações conforme um parâmetro.

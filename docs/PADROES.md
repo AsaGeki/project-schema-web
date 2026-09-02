@@ -101,9 +101,9 @@ subclasses por status. Nunca declarar a classe e exportá-la numa linha separada
 
 ```ts
 export default class UsersController {
-  public async create(req: Request, res: Response): Promise<Response> {
+  public async create(this: void, req: Request<unknown, unknown, IUser>, res: Response): Promise<Response> {
     const service = container.resolve(CreateService);
-    const result = await service.execute(req.body as IUser);
+    const result = await service.execute(req.body);
     return sendResponse(res, result);
   }
 }
@@ -113,10 +113,17 @@ O controller é fino: resolve o service no container dentro do próprio método,
 Não é injetável — o router o instancia com `new`. Métodos são `public async` e retornam
 `Promise<Response>`.
 
-O router registra o método com `.bind(controller)`. Sem isso, um controller que use `this` — para
-um auxiliar privado de autorização, para um cliente externo guardado em campo — quebraria apenas em
-runtime. A regra `@typescript-eslint/unbound-method`, ligada pelo lint com informação de tipo,
-recusa o método passado solto.
+**Tipagem da entrada vem dos genéricos do Express, não de `as`.** `Request<Params, ResBody, ReqBody>`
+tipa `req.params` e `req.body`; o segundo genérico de `Response` tipa `res.locals`, que é onde o
+`validateQuery` deposita a query já coagida. Assim `req.body`, `req.params.id` e `res.locals.query`
+chegam tipados no corpo do método, e o contrato fica na assinatura em vez de espalhado em casts.
+
+**Método de controller declara `this: void`**, e por isso é registrado na rota sem `bind`. A marca
+é verificada pelo compilador: tocar `this` num método assim não compila. Quando um controller
+precisar de estado — cliente externo em campo, auxiliar privado de autorização — o método perde a
+marca, e aí `@typescript-eslint/unbound-method` volta a exigir `.bind(controller)` no `Route`. O
+`bind` deixa de ser ritual em toda rota e passa a marcar exatamente os métodos que dependem da
+instância.
 
 Ordem canônica dos métodos: `create`, `findAll`, `findById`, `update`, `delete`, e depois os
 verbos de fluxo próprios do módulo.

@@ -12,9 +12,9 @@ const controller = new LogsController();
 logRoute.use(verifyToken);
 
 // Log não tem update nem delete: registro de auditoria é imutável.
-logRoute.post('/', validateSchema(logSchema), controller.create.bind(controller));
+logRoute.post('/', validateSchema(logSchema), controller.create);
 
 // Consulta é restrita a admin — a checagem é do FindAllService, não de middleware.
-logRoute.get('/', validateQuery(listQuerySchema), controller.findAll.bind(controller));
+logRoute.get('/', validateQuery(listQuerySchema), controller.findAll);
 
 export default logRoute;

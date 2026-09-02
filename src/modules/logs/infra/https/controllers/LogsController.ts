@@ -9,15 +9,19 @@ import type { IListQuery } from '@shared/types/pagination';
 import type { Request, Response } from 'express';
 
 export default class LogsController {
-  public async create(req: Request, res: Response): Promise<Response> {
+  public async create(this: void, req: Request<unknown, unknown, ILog>, res: Response): Promise<Response> {
     const service = container.resolve(CreateService);
-    const result = await service.execute(req.body as ILog, req.user.id);
+    const result = await service.execute(req.body, req.user.id);
     return sendResponse(res, result);
   }
 
-  public async findAll(req: Request, res: Response): Promise<Response> {
+  public async findAll(
+    this: void,
+    req: Request,
+    res: Response<unknown, { query: IListQuery }>,
+  ): Promise<Response> {
     const service = container.resolve(FindAllService);
-    const result = await service.execute(req.user, res.locals.query as IListQuery);
+    const result = await service.execute(req.user, res.locals.query);
     return sendResponse(res, result);
   }
 }
