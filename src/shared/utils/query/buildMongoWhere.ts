@@ -2,6 +2,7 @@ import type { IFilterConfig } from '@shared/types/filter';
 import type { IListQuery } from '@shared/types/pagination';
 import { coerceRange } from '@shared/utils/query/coerceRange';
 import { coerceScalar } from '@shared/utils/query/coerceScalar';
+import { escapeRegex } from '@shared/utils/query/escapeRegex';
 
 /**
  * Traduz a query coada + a `filterConfig` do repositório para o filtro do Mongo.
@@ -26,7 +27,9 @@ export function buildMongoWhere<TFilter>(query: IListQuery, config: IFilterConfi
 
     filter.$or = searchByNumber
       ? config.search.number!.map(field => ({ [field]: numeric }))
-      : config.search.text.map(field => ({ [field]: { $regex: term, $options: 'i' } }));
+      : // O termo vem do cliente: escapado, para `.` ou `(` não virarem
+        // metacaractere de regex nem quebrarem a query.
+        config.search.text.map(field => ({ [field]: { $regex: escapeRegex(term), $options: 'i' } }));
   }
 
   for (const [field, spec] of Object.entries(config.range ?? {})) {

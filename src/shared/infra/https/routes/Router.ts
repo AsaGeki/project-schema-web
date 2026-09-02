@@ -2,6 +2,7 @@ import { Router } from 'express';
 
 import LogRoute from '@modules/logs/infra/https/routes/LogRoute';
 import UserRoute from '@modules/users/infra/https/routes/UserRoute';
+import AppRoute from '@shared/infra/https/routes/AppRoute';
 
 /**
  * Barrel global das rotas: agrega o `Route` de cada módulo sob o prefixo do
@@ -9,6 +10,7 @@ import UserRoute from '@modules/users/infra/https/routes/UserRoute';
  */
 const routes = Router();
 
+routes.use('/', AppRoute);
 routes.use('/users', UserRoute);
 routes.use('/logs', LogRoute);
 
