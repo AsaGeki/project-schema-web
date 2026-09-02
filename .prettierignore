@@ -1,0 +1,9 @@
+node_modules/
+dist/
+coverage/
+logs/
+.claude/
+
+# Auto-gerados — não formatar.
+pnpm-lock.yaml
+prisma/migrations/

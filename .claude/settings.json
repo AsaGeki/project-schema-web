@@ -1,0 +1,30 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(pnpm typecheck)",
+      "Bash(pnpm lint)",
+      "Bash(pnpm lint:fix)",
+      "Bash(pnpm format)",
+      "Bash(pnpm build)",
+      "Bash(pnpm --version)",
+      "Bash(git check-ignore *)",
+      "mcp__context7__query-docs"
+    ]
+  },
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Write|Edit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash .claude/hooks/post-edit-check.sh",
+            "shell": "bash",
+            "timeout": 120,
+            "statusMessage": "Rodando typecheck/lint/format (checklist pós-edição)..."
+          }
+        ]
+      }
+    ]
+  }
+}

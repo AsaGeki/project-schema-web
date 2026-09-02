@@ -1,0 +1,32 @@
+version: 2
+updates:
+  # Dependências npm (pnpm usa o mesmo ecossistema).
+  - package-ecosystem: npm
+    directory: /
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 10
+    groups:
+      # Tooling de dev não quebra a API em produção — agrupa tudo, major incluso,
+      # num único PR.
+      dev-dependencies:
+        dependency-type: development
+      # Produção agrupa só minor/patch. Major fica fora do grupo de propósito:
+      # merece revisão isolada por poder trazer breaking change.
+      minor-and-patch:
+        dependency-type: production
+        update-types:
+          - minor
+          - patch
+
+  # Versões das GitHub Actions usadas no CI.
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+    groups:
+      github-actions:
+        update-types:
+          - major
+          - minor
+          - patch

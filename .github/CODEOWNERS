@@ -1,0 +1,3 @@
+# Owner padrão de todo o repositório.
+# Solicita review automaticamente em PRs (a exigência depende de branch protection).
+* @AsaGeki

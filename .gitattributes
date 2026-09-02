@@ -1,0 +1,6 @@
+# Normaliza fins de linha: LF no repositório e no checkout, em qualquer SO.
+# Evita divergência de CRLF/LF entre Windows e o CI (Linux).
+* text=auto eol=lf
+
+# Lockfile é sempre LF.
+pnpm-lock.yaml text eol=lf

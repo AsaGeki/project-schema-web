@@ -1,0 +1,15 @@
+{
+  "mcpServers": {
+    "prisma": {
+      "command": "cmd",
+      "args": ["/c", "npx", "-y", "prisma", "mcp"]
+    },
+    "mongodb": {
+      "command": "cmd",
+      "args": ["/c", "npx", "-y", "mongodb-mcp-server"],
+      "env": {
+        "MDB_MCP_CONNECTION_STRING": "${MONGO_URL}"
+      }
+    }
+  }
+}
