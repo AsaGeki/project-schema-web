@@ -20,8 +20,8 @@ build/
 coverage/
 .vitest/
 
-# Logs
-logs/
+# Logs (só a pasta da raiz — src/modules/logs/ é código)
+/logs/
 *.log
 
 # OS
