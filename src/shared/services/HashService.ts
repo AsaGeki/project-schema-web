@@ -1,13 +1,11 @@
 import bcrypt from 'bcryptjs';
 
-import { authConfig } from '@configs/authConfig';
-
 /**
  * Service interno de hash — não atravessa a fronteira HTTP, então retorna o
  * valor puro em vez do envelope de resposta.
  */
 export default class HashService {
-  private readonly saltRounds = authConfig.saltRounds;
+  private readonly saltRounds = 10;
 
   public async hash(plain: string): Promise<string> {
     return bcrypt.hash(plain, this.saltRounds);

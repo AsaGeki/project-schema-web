@@ -56,7 +56,7 @@ export default function errorMiddleware(error: Error, req: Request, res: Respons
     title: 'Erro interno do servidor!',
     message: 'Ocorreu um erro inesperado. Tente novamente mais tarde.',
     // Em produção o erro real não é exposto ao cliente.
-    ...(env.NODE_ENV !== 'prod' && { error: error.message }),
+    ...(env.server.NODE_ENV !== 'prod' && { error: error.message }),
   });
 }
 

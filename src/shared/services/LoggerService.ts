@@ -27,8 +27,8 @@ const customLevels = {
 winston.addColors(customLevels.colors);
 
 function resolveLevel(): string {
-  if (env.NODE_ENV === 'dev') return 'info';
-  if (env.NODE_ENV === 'debug') return 'debug';
+  if (env.server.NODE_ENV === 'dev') return 'info';
+  if (env.server.NODE_ENV === 'debug') return 'debug';
   return 'notice';
 }
 

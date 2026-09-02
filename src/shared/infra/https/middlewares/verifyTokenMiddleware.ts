@@ -1,6 +1,6 @@
 import jwt from 'jsonwebtoken';
 
-import { authConfig } from '@configs/authConfig';
+import { env } from '@configs/envConfig';
 import { UnauthorizedError } from '@shared/errors/UniversalError';
 
 import type { NextFunction, Request, Response } from 'express';
@@ -25,7 +25,7 @@ export function verifyToken(req: Request, _res: Response, next: NextFunction): v
   const token = header.slice('Bearer '.length).trim();
 
   try {
-    const payload = jwt.verify(token, authConfig.jwt.secret) as ITokenPayload;
+    const payload = jwt.verify(token, env.auth.JWT_SECRET) as ITokenPayload;
     req.user = { id: payload.sub, isAdmin: payload.isAdmin };
     next();
   } catch {

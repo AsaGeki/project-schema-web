@@ -24,8 +24,8 @@ nos outros 282 services do repositório). Seguiram a casa: `sig/document`, `sig/
 ```
 src/
   configs/                     fora de shared, plural
-    envConfig.ts               Zod sobre process.env, process.exit(1) em falha
-    apiConfig.ts  authConfig.ts
+    envConfig.ts               única leitura de process.env, agrupada por domínio
+    corsConfig.ts              configuração derivada, com lógica própria
     database/
       prismaClient.ts
       mongoClient.ts
@@ -65,6 +65,15 @@ src/
 
 Middlewares moram em `shared/infra/https/middlewares/` — middleware é infraestrutura HTTP, não
 utilitário. `configs/` fica fora de `shared/`.
+
+**`envConfig` é o único ponto que lê `process.env`**, e expõe as variáveis agrupadas por domínio
+(`env.server.PORT`, `env.auth.JWT_SECRET`, `env.database.MONGO_URL`). Quem precisa de configuração
+lê de lá, ou de um `*Config` que derive de lá.
+
+Um arquivo em `configs/` só existe quando **faz algo além de repassar variável** — montar o
+callback de origem do CORS, validar um formato, escolher um provedor. Objeto que apenas espelha
+env em outro nome não é configuração: some, e o consumidor passa a ler o `envConfig` direto.
+Constante que não vem de ambiente pertence a quem a usa, não a um arquivo de config.
 
 ## Nomenclatura
 

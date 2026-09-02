@@ -10,12 +10,12 @@ const log = logger.child({ prefix: 'mongo' });
  * Prisma deixa a variável vazia e a conexão é ignorada.
  */
 export async function connectMongo(): Promise<void> {
-  if (!env.MONGO_URL) {
+  if (!env.database.MONGO_URL) {
     log.debug('MONGO_URL vazia — conexão com o Mongo ignorada.');
     return;
   }
 
-  await mongoose.connect(env.MONGO_URL);
+  await mongoose.connect(env.database.MONGO_URL);
   log.notice('Conectado ao MongoDB.');
 }
 

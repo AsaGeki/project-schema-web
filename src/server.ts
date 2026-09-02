@@ -1,6 +1,5 @@
 import fs from 'fs';
 
-import { apiConfig } from '@configs/apiConfig';
 import { connectMongo, disconnectMongo } from '@configs/database/mongoClient';
 import { env } from '@configs/envConfig';
 import { AppServer } from '@shared/infra/https/app';
@@ -14,12 +13,12 @@ const log = logger.child({ prefix: 'server' });
  * preenchidos. Faltando qualquer um, o servidor sobe em HTTP.
  */
 function resolveHttpsOptions(): IHttpsServerOptions | undefined {
-  if (!env.HTTPS_KEY || !env.HTTPS_CERT) return undefined;
+  if (!env.https.KEY || !env.https.CERT) return undefined;
 
   return {
-    key: fs.readFileSync(env.HTTPS_KEY, 'utf-8'),
-    cert: fs.readFileSync(env.HTTPS_CERT, 'utf-8'),
-    ...(env.HTTPS_CA ? { ca: fs.readFileSync(env.HTTPS_CA, 'utf-8') } : {}),
+    key: fs.readFileSync(env.https.KEY, 'utf-8'),
+    cert: fs.readFileSync(env.https.CERT, 'utf-8'),
+    ...(env.https.CA ? { ca: fs.readFileSync(env.https.CA, 'utf-8') } : {}),
   };
 }
 
@@ -30,8 +29,8 @@ async function start(): Promise<void> {
   const { httpServer } = new AppServer(httpsOptions);
   const protocol = httpsOptions ? 'https' : 'http';
 
-  httpServer.listen(apiConfig.port, () => {
-    log.notice(`Servidor no ar em ${protocol}://${apiConfig.url}:${apiConfig.port}/api`);
+  httpServer.listen(env.server.PORT, () => {
+    log.notice(`Servidor no ar em ${protocol}://${env.server.URL}:${env.server.PORT}/api`);
   });
 
   // Encerramento ordenado: para de aceitar conexões antes de fechar o Mongo.

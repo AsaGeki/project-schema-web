@@ -25,7 +25,9 @@ O `pnpm db:generate` é obrigatório mesmo sem banco no ar — o client do Prism
 
 ## Variáveis de ambiente
 
-Validadas por Zod em [`src/configs/envConfig.ts`](../src/configs/envConfig.ts). Configuração inválida derruba o processo no boot, com o erro impresso — não existe partida com ambiente incompleto.
+Validadas por Zod em [`src/configs/envConfig.ts`](../src/configs/envConfig.ts), que é o único arquivo do projeto que lê `process.env`. Configuração inválida derruba o processo no boot, com o erro impresso — não existe partida com ambiente incompleto.
+
+O consumo é agrupado por domínio: `env.server.PORT`, `env.https.CERT`, `env.database.MONGO_URL`, `env.auth.JWT_SECRET`. `isProduction` também é exportado de lá.
 
 | Variável                   | Default         | Observação                                                          |
 | -------------------------- | --------------- | ------------------------------------------------------------------- |
@@ -69,6 +71,14 @@ Winston com níveis próprios (`error`, `notice`, `warn`, `info`, `debug`). O n�
 O console recebe tudo do nível ativo. Em arquivo, com rotação diária, ficam só `logs/errors/` e `logs/notices/` — 10 MB por arquivo, 10 dias de retenção, compactado.
 
 O rótulo colorido do console mostra o `prefix` do child logger quando existe (`[USERS]`), e o nível quando não (`[INFO]`).
+
+## CORS
+
+A allowlist vem de `CORS`, em lista separada por vírgula, e `*` libera qualquer origem. Requisição sem cabeçalho `Origin` — cliente HTTP, chamada server-to-server — passa sempre.
+
+Origem fora da lista recebe **403** no formato de erro padrão da API, e não um 500 genérico: [`src/configs/corsConfig.ts`](../src/configs/corsConfig.ts) rejeita com `ForbiddenError`, não com `Error` cru.
+
+`credentials` só é habilitado em produção.
 
 ## MCP
 

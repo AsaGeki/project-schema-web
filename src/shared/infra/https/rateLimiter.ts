@@ -1,6 +1,6 @@
 import { rateLimit } from 'express-rate-limit';
 
-import { apiConfig } from '@configs/apiConfig';
+import { isProduction } from '@configs/envConfig';
 import { TooManyRequestsError } from '@shared/errors/UniversalError';
 
 import type { RequestHandler } from 'express';
@@ -16,7 +16,7 @@ interface IRateLimiterOptions {
  * a resposta sair no mesmo formato dos demais erros.
  */
 export function createRateLimiter({ windowMs, limit }: IRateLimiterOptions): RequestHandler {
-  if (!apiConfig.isProduction) {
+  if (!isProduction) {
     return (_req, _res, next) => next();
   }
 

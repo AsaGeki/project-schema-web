@@ -8,7 +8,8 @@ import helmet from 'helmet';
 import 'reflect-metadata';
 import '@shared/container';
 
-import { apiConfig } from '@configs/apiConfig';
+import { corsConfig } from '@configs/corsConfig';
+import { env } from '@configs/envConfig';
 import { enforceJsonContentType } from '@shared/infra/https/middlewares/contentTypeMiddleware';
 import errorMiddleware from '@shared/infra/https/middlewares/errorMiddleware';
 import { logRouterMiddleware } from '@shared/infra/https/middlewares/logRouterMiddleware';
@@ -47,7 +48,7 @@ export class AppServer {
     // nele, e `req.ip` fica sempre o do proxy.
     this.server.set('trust proxy', 1);
 
-    if (apiConfig.isRouterMonitoringEnabled) {
+    if (env.server.ENABLE_ROUTER_MONITORING) {
       this.server.use(logRouterMiddleware);
     }
 
@@ -59,8 +60,8 @@ export class AppServer {
     this.server.use(createRateLimiter({ windowMs: FIFTEEN_MINUTES_MS, limit: 300 }));
 
     this.server.use(enforceJsonContentType);
-    this.server.use(express.json({ limit: apiConfig.jsonLimit }));
-    this.server.use(cors({ origin: apiConfig.corsOrigin, credentials: apiConfig.isProduction }));
+    this.server.use(express.json({ limit: env.server.JSON_LIMIT }));
+    this.server.use(cors(corsConfig));
   }
 
   private setupRoutes(): void {

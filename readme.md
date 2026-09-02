@@ -23,7 +23,7 @@ Detalhes de ambiente, variáveis e bancos em [`docs/DEV_SETUP.md`](docs/DEV_SETU
 
 ```
 src/
-  configs/                 envConfig (Zod), apiConfig, authConfig, clientes de banco
+  configs/                 envConfig (Zod), corsConfig, clientes de banco
   shared/
     errors/                UniversalError + tradutores de Prisma e Mongo
     infra/
