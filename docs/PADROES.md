@@ -1,6 +1,6 @@
 # Padrões do backend base
 
-Documento vivo do padrão de código e arquitetura deste projeto. Ele nasce de um levantamento
+Documento vivo do padrão de código e arquitetura deste projeto. O porquê de cada decisão, e o que ela custa, está em [`DECISOES.md`](DECISOES.md). Ele nasce de um levantamento
 sobre o código de autoria própria em sete repositórios: `api-finance-back`, `asageki-rpg-web`,
 `avbot_back`, `backend_sig`, `crons_services`, `fbi_back` e `sso_back`.
 

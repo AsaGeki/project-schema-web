@@ -84,6 +84,7 @@ pnpm db:studio     # prisma studio
 | [`docs/PADROES.md`](docs/PADROES.md)                           | O padrão de código: estrutura, nomenclatura, controller, service. |
 | [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md)                 | Camadas, SOLID, persistência dupla, checklist de módulo novo.     |
 | [`docs/RESPONSE_CONVENTIONS.md`](docs/RESPONSE_CONVENTIONS.md) | Contrato de sucesso e de erro na fronteira HTTP.                  |
+| [`docs/DECISOES.md`](docs/DECISOES.md)                         | Por que cada decisão foi tomada, e o que ela custa.               |
 | [`docs/DEV_SETUP.md`](docs/DEV_SETUP.md)                       | Ambiente, variáveis, bancos, logs, armadilhas de Windows.         |
 | [`CLAUDE.md`](CLAUDE.md)                                       | Contexto para agentes de código trabalhando neste repositório.    |
 

@@ -8,7 +8,7 @@
 | Last update date    | 2026-09-01                                                         |
 | Last prompt summary | Documentar a arquitetura do schema base após a reescrita do `src/` |
 
-Contrato e nomenclatura estão em [`PADROES.md`](PADROES.md). Este documento cobre camadas, direção de dependência e o que precisa existir para um módulo novo funcionar.
+Contrato e nomenclatura estão em [`PADROES.md`](PADROES.md); o porquê de cada escolha, e o que ela custa, está em [`DECISOES.md`](DECISOES.md). Este documento cobre camadas, direção de dependência e o que precisa existir para um módulo novo funcionar.
 
 ## Visão geral
 

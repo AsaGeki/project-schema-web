@@ -11,6 +11,7 @@ Este repositório é um **schema base de backend**: o ponto de partida para APIs
 | [`docs/PADROES.md`](docs/PADROES.md)                           | O padrão em si: estrutura, nomenclatura, anatomia de controller e service, persistência, e o levantamento que o originou. |
 | [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md)                 | Camadas, direção de dependência, SOLID aplicado, injeção de dependência, checklist de módulo novo, anti-padrões.          |
 | [`docs/RESPONSE_CONVENTIONS.md`](docs/RESPONSE_CONVENTIONS.md) | Contrato de sucesso (`IResponseEx` + `sendResponse`) e de erro (`UniversalError` + `errorMiddleware`).                    |
+| [`docs/DECISOES.md`](docs/DECISOES.md)                         | Por que cada decisão de arquitetura foi tomada, e o que ela custa. É o documento a ler antes de propor mudar o padrão.    |
 | [`docs/DEV_SETUP.md`](docs/DEV_SETUP.md)                       | Como levantar o ambiente, variáveis, bancos, e as armadilhas de Windows já encontradas.                                   |
 
 ## Stack e comandos
