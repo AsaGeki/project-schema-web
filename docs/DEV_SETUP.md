@@ -10,7 +10,7 @@
 
 ## Requisitos
 
-Node 20+, pnpm 9+. PostgreSQL e MongoDB são opcionais e independentes: cada um é ligado pela sua variável de conexão.
+Node 22+, pnpm 12+ (fixado em `packageManager`, resolvido pelo corepack). PostgreSQL e MongoDB são opcionais e independentes: cada um é ligado pela sua variável de conexão.
 
 ## Primeira execução
 
@@ -88,4 +88,4 @@ Origem fora da lista recebe **403** no formato de erro padrão da API, e não um
 
 - **`prisma generate` com `EPERM`**: o `tsx watch` do `pnpm dev` mantém o engine do Prisma aberto. Pare o dev server antes de `pnpm db:migrate` ou `pnpm db:generate`.
 - **`pnpm install` sobre `node_modules` de npm**: falha com `EPERM` ao mover pacotes para `.ignored`. Apague `node_modules` e reinstale.
-- **Build scripts ignorados**: pnpm 10+ exige liberação explícita. Ela está em [`pnpm-workspace.yaml`](../pnpm-workspace.yaml) (`onlyBuiltDependencies`) — o campo `pnpm` do `package.json` não é mais lido, e o pnpm avisa se ele estiver lá.
+- **Build scripts ignorados**: o pnpm exige liberação explícita. Ela está em [`pnpm-workspace.yaml`](../pnpm-workspace.yaml) (`allowBuilds`) — o campo `pnpm` do `package.json` não é lido. `onlyBuiltDependencies` é a chave equivalente até o pnpm 11, ignorada a partir do 12.

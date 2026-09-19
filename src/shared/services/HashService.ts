@@ -1,4 +1,4 @@
-import bcrypt from 'bcryptjs';
+import bcrypt from 'bcrypt';
 
 /**
  * Service interno de hash — não atravessa a fronteira HTTP, então retorna o

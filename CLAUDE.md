@@ -16,7 +16,7 @@ Este repositório é um **schema base de backend**: o ponto de partida para APIs
 
 ## Stack e comandos
 
-Node 20+, TypeScript, Express 5, tsyringe, Zod, Winston. Persistência dupla: PostgreSQL via Prisma e MongoDB via Mongoose. Gerenciador de pacote: pnpm.
+Node 22+, TypeScript, Express 5, tsyringe, Zod, Winston. Persistência dupla: PostgreSQL via Prisma e MongoDB via Mongoose. Gerenciador de pacote: pnpm.
 
 ```bash
 pnpm dev           # tsx watch, servidor de desenvolvimento
@@ -92,4 +92,4 @@ Isso também roda sozinho via hook `PostToolUse` ([`.claude/settings.json`](.cla
 
 - **`prisma generate` falha com `EPERM`** se `pnpm dev` estiver rodando — o `tsx watch` mantém o engine do Prisma aberto. Pare o dev server antes de rodar `pnpm db:migrate` ou `pnpm db:generate`.
 - **`pnpm install` sobre `node_modules` criado por npm** falha com `EPERM` ao mover pacotes para `.ignored`. Apague `node_modules` e reinstale.
-- **Build scripts do Prisma são ignorados por padrão** no pnpm 10+. A liberação está em [`pnpm-workspace.yaml`](pnpm-workspace.yaml) (`onlyBuiltDependencies`) — o campo `pnpm` do `package.json` não é mais lido.
+- **Build scripts do Prisma são ignorados por padrão**. A liberação está em [`pnpm-workspace.yaml`](pnpm-workspace.yaml) (`allowBuilds`) — o campo `pnpm` do `package.json` não é lido, e `onlyBuiltDependencies` só vale até o pnpm 11.
