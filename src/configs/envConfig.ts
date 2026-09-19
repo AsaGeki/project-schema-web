@@ -27,6 +27,10 @@ const envSchema = z.object({
   /** Segredo do refresh token — deve ser diferente de JWT_SECRET. */
   JWT_REFRESH_SECRET: z.string(),
   JWT_REFRESH_EXPIRES_IN: z.string().default('12h'),
+  /** Chaves de integração server-to-server, no formato `id:segredo,id2:segredo2`. */
+  API_KEYS: z.string().default(''),
+  /** Janela de tolerância do timestamp assinado, em milissegundos. */
+  API_KEYS_TOLERANCE_MS: z.coerce.number().default(5 * 60 * 1000),
 });
 
 const parsed = envSchema.safeParse(process.env);
@@ -56,6 +60,10 @@ export const env = {
   database: {
     DATABASE_URL: raw.DATABASE_URL,
     MONGO_URL: raw.MONGO_URL,
+  },
+  apiKeys: {
+    API_KEYS: raw.API_KEYS,
+    TOLERANCE_MS: raw.API_KEYS_TOLERANCE_MS,
   },
   auth: {
     JWT_SECRET: raw.JWT_SECRET,

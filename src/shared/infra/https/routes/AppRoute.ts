@@ -2,6 +2,7 @@ import { Router } from 'express';
 import { container } from 'tsyringe';
 
 import { env } from '@configs/envConfig';
+import { verifyApiKey } from '@shared/infra/https/middlewares/verifyApiKeyMiddleware';
 import { sendResponse } from '@shared/infra/https/sendResponse';
 import HealthService from '@shared/services/HealthService';
 
@@ -36,6 +37,11 @@ appRoute.get('/health', async (_req: Request, res: Response): Promise<Response> 
     status: health.status === 'ok' ? 200 : 503,
     data: health,
   });
+});
+
+/** Eco assinado: existe para integrações validarem a assinatura ponta a ponta. */
+appRoute.post('/integration/echo', verifyApiKey, (req: Request, res: Response): Response => {
+  return sendResponse(res, { success: true, status: 200, data: { apiKeyId: req.apiKeyId, body: req.body as unknown } });
 });
 
 export default appRoute;

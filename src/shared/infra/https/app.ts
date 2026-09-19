@@ -60,7 +60,16 @@ export class AppServer {
     this.server.use(createRateLimiter({ windowMs: FIFTEEN_MINUTES_MS, limit: 300 }));
 
     this.server.use(enforceJsonContentType);
-    this.server.use(express.json({ limit: env.server.JSON_LIMIT }));
+    // `verify` guarda o corpo bruto: a assinatura HMAC das integrações é
+    // calculada sobre os bytes originais, que o JSON reserializado não reproduz.
+    this.server.use(
+      express.json({
+        limit: env.server.JSON_LIMIT,
+        verify: (req, _res, buffer) => {
+          (req as express.Request).rawBody = buffer;
+        },
+      }),
+    );
     this.server.use(cors(corsConfig));
   }
 
