@@ -6,7 +6,10 @@ import type { IFilterConfig } from '@shared/types/filter';
 
 import type { User } from '@prisma/client';
 
-/** Projeção pública — mantém a senha fora de toda query que não seja de login. */
+/**
+ * Campos devolvidos pelo `findByEmail`. Quem tira a senha de toda query é o
+ * `omit` global do `prismaClient`, não esta lista.
+ */
 const publicFields = {
   id: true,
   name: true,

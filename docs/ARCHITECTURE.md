@@ -4,9 +4,9 @@
 | ------------------- | ------------------------------------------------------------------ |
 | Prompt summary      | Documentar a arquitetura do schema base após a reescrita do `src/` |
 | Creation date       | 2026-09-01                                                         |
-| Change count        | 0                                                                  |
-| Last update date    | 2026-09-01                                                         |
-| Last prompt summary | Documentar a arquitetura do schema base após a reescrita do `src/` |
+| Change count        | 4                                                                  |
+| Last update date    | 2026-09-26                                                         |
+| Last prompt summary | Registrar o omit global de campo sensível no checklist             |
 
 Contrato e nomenclatura estão em [`PADROES.md`](PADROES.md); o porquê de cada escolha, e o que ela custa, está em [`DECISOES.md`](DECISOES.md). Este documento cobre camadas, direção de dependência e o que precisa existir para um módulo novo funcionar.
 
@@ -133,7 +133,7 @@ Regra de papel (`isAdmin`) mora no **service**, não em middleware de rota. `Fin
 
 1. `dtos/<Nome>DTO.ts` — schema Zod, `IX` derivado dele, `IXCreate`/`IXUpdate` compondo `IAuditFields`.
 2. `repositories/I<Nome>Repository.ts` — estende `IBaseRepository` (ou a extensão do banco).
-3. `infra/prisma/repositories/` ou `infra/mongo/{models,repositories}/` — a implementação, com `filterConfig`.
+3. `infra/prisma/repositories/` ou `infra/mongo/{models,repositories}/` — a implementação, com `filterConfig`. Coluna sensível de model Prisma entra no `omit` global do `prismaClient`.
 4. `services/` — um arquivo por ação; subpasta por recurso quando o módulo tem mais de um.
 5. `infra/https/controllers/<Nome>Controller.ts` — fino.
 6. `infra/https/routes/<nome>Route.ts` — `new Controller()`, métodos registrados diretamente.

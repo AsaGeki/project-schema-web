@@ -198,6 +198,13 @@ Recursos exclusivos de cada banco ficam em interfaces de extensão (`IMongoRepos
 `bulkUpsert`, `insertMany`; `IPrismaRepository` com `transaction`). Um módulo que depende da
 extensão está declaradamente amarrado àquele banco, e isso fica visível na assinatura.
 
+**Campo sensível não sai do banco por padrão.** `BasePrismaRepository` devolve o registro inteiro
+em `create`, `findById`, `update`, `delete` e `list`, então coluna que não pode chegar à resposta
+HTTP — senha, token, segredo — entra no `omit` global de `src/configs/database/prismaClient.ts`
+(`omit: { user: { password: true } }`). A query que precisa do campo pede explicitamente com
+`omit: { campo: false }`, como o `findByEmailWithPassword` do módulo `users`. Projeção por `select`
+num método isolado não protege os outros métodos herdados da base.
+
 **Porta e adaptador vale para toda dependência trocável**, não só repositório: cache, storage,
 client de API externa. A interface fica em `repositories/` do módulo, ou em
 `shared/infra/<assunto>/I<Nome>.ts` quando é transversal; a implementação fica em
