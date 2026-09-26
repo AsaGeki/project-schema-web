@@ -46,7 +46,7 @@ modules/<nome>/
   repositories/I<Nome>Repository.ts           interface
   infra/prisma|mongo/                         implementação
   infra/https/controllers/<Nome>Controller.ts
-  infra/https/routes/<Nome>Route.ts
+  infra/https/routes/<nome>Route.ts
   services/                                   um arquivo por ação
   container/index.ts                          registro no container
 ```

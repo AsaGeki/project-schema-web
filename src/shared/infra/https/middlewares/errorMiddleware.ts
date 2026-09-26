@@ -1,8 +1,8 @@
 import { ZodError } from 'zod';
 
 import { isProduction } from '@configs/envConfig';
-import { isMongoError, mapMongoError } from '@shared/errors/MongoErrors';
-import { isPrismaError, mapPrismaError } from '@shared/errors/PrismaErrors';
+import { isMongoError, mapMongoError } from '@shared/errors/mongoErrors';
+import { isPrismaError, mapPrismaError } from '@shared/errors/prismaErrors';
 import {
   BadRequestError,
   PayloadTooLargeError,

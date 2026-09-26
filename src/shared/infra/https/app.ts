@@ -14,7 +14,7 @@ import { enforceJsonContentType } from '@shared/infra/https/middlewares/contentT
 import errorMiddleware from '@shared/infra/https/middlewares/errorMiddleware';
 import { logRouterMiddleware } from '@shared/infra/https/middlewares/logRouterMiddleware';
 import { createRateLimiter } from '@shared/infra/https/rateLimiter';
-import routes from '@shared/infra/https/routes/Router';
+import routes from '@shared/infra/https/routes/router';
 
 import type { ServerOptions } from 'https';
 

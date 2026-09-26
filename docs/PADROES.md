@@ -33,7 +33,7 @@ src/
     container/index.ts
     errors/
       UniversalError.ts
-      PrismaErrors.ts  MongoErrors.ts
+      prismaErrors.ts  mongoErrors.ts
     infra/
       database/
         IBaseRepository.ts     contrato agnóstico de banco
@@ -44,7 +44,7 @@ src/
         sendResponse.ts
         rateLimiter.ts
         middlewares/
-        routes/Router.ts       barrel global das rotas
+        routes/router.ts       barrel global das rotas
     services/                  LoggerService, HashService
     types/                     response.ts  pagination.ts  filter.ts  audit.ts  global.d.ts
     utils/                     subpasta por domínio, um util por arquivo
@@ -81,10 +81,13 @@ Constante que não vem de ambiente pertence a quem a usa, não a um arquivo de c
 consolidados no domínio técnico. Comentários em português. Mensagens de erro voltadas ao usuário
 final em português.
 
-**Arquivos.** `dtos/` no plural. Arquivo de rota individual em PascalCase com sufixo `Route`
-(`UserRoute.ts`). O sufixo `Router` pertence exclusivamente ao barrel global em
-`shared/infra/https/routes/`. Service em PascalCase com sufixo `Service` (`CreateService.ts`,
-nunca `Create.service.ts`).
+**Arquivos.** O arquivo se chama como aquilo que exporta. Exporta entidade nomeada (classe,
+interface, enum, model): PascalCase idêntico ao export (`UsersController.ts`, `CreateService.ts`,
+`UniversalError.ts`). Exporta função ou valor: camelCase pelo assunto (`userRoute.ts`,
+`errorMiddleware.ts`, `prismaErrors.ts`, `envConfig.ts`). `dtos/` e `shared/types/` são exceção e
+mantêm o nome que têm. `dtos/` no plural. Rota de módulo leva o sufixo `Route` (`userRoute.ts`); o
+sufixo `Router` pertence exclusivamente ao barrel global `shared/infra/https/routes/router.ts`.
+Service leva o sufixo `Service` (`CreateService.ts`, nunca `Create.service.ts`).
 
 **Export.** Um arquivo com uma única classe usa `export default`. Um arquivo que declara várias
 classes usa named export — é o caso de `UniversalError.ts`, que reúne a classe base e as
