@@ -4,9 +4,9 @@
 | ------------------- | ------------------------------------------------------------------- |
 | Prompt summary      | Registrar o porquê de cada decisão arquitetural, não só o que ela é |
 | Creation date       | 2026-09-01                                                          |
-| Change count        | 1                                                                   |
+| Change count        | 2                                                                   |
 | Last update date    | 2026-09-26                                                          |
-| Last prompt summary | Registrar a paginação na raiz do envelope                           |
+| Last prompt summary | Registrar as exceções de leitura de ambiente                        |
 
 [`PADROES.md`](PADROES.md) diz **o que** é o padrão e [`ARCHITECTURE.md`](ARCHITECTURE.md) diz **como** montar um módulo. Este documento diz **por quê**, e o que cada escolha custa.
 
@@ -154,7 +154,7 @@ Vale ser exato sobre o que isso garante. Para `req.params.id` a garantia é real
 
 ## `envConfig` como única leitura de ambiente
 
-**Decisão.** Nenhum arquivo além dele toca `process.env`. Arquivo em `configs/` só existe quando faz algo além de repassar variável.
+**Decisão.** Nenhum arquivo além dele toca `process.env`, com três exceções existentes: `MEMORY_LIMIT_MB` no `HealthService`, `npm_package_name`/`npm_package_version` no `GET /api/` e `SEED_ADMIN_*` no `prisma/seed.ts`. Arquivo em `configs/` só existe quando faz algo além de repassar variável.
 
 **Por quê.** `process.env` espalhado significa que a resposta para "quais variáveis este projeto usa?" é um grep, e que uma variável ausente aparece como `undefined` no meio de uma requisição em vez de no boot. Centralizado e validado, ambiente incompleto derruba o processo na partida, com a lista do que falta.
 

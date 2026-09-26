@@ -4,9 +4,9 @@
 | ------------------- | -------------------------------------------------- |
 | Prompt summary      | Documentar como levantar o ambiente do schema base |
 | Creation date       | 2026-09-01                                         |
-| Change count        | 1                                                  |
+| Change count        | 3                                                  |
 | Last update date    | 2026-09-26                                         |
-| Last prompt summary | Alinhar as variáveis ao padrão dos projetos        |
+| Last prompt summary | Registrar as exceções de leitura de ambiente       |
 
 ## Requisitos
 
@@ -25,7 +25,7 @@ O `pnpm db:generate` é obrigatório mesmo sem banco no ar — o client do Prism
 
 ## Variáveis de ambiente
 
-Validadas por Zod em [`src/configs/envConfig.ts`](../src/configs/envConfig.ts), que é o único arquivo do projeto que lê `process.env`. Configuração inválida derruba o processo no boot, com o erro impresso — não existe partida com ambiente incompleto.
+Validadas por Zod em [`src/configs/envConfig.ts`](../src/configs/envConfig.ts), que é o ponto único de leitura de `process.env` (as exceções estão no fim desta seção). Configuração inválida derruba o processo no boot, com o erro impresso — não existe partida com ambiente incompleto.
 
 O consumo é agrupado por domínio: `env.server.PORT`, `env.https.CERT`, `env.database.MONGODB_URI`, `env.auth.JWT_SECRET`. `isProduction` e o enum `ENodeEnv` também são exportados de lá.
 
@@ -51,7 +51,7 @@ Os nomes seguem o padrão dos backends da empresa (`avb_one_back`, `fbi_back`, `
 | `API_KEYS_HMAC`               | vazio           | Chaves de integração server-to-server, `id:segredo,id2:segredo2`.                                    |
 | `API_KEYS_HMAC_TOLERANCIA_MS` | `300000`        | Janela do timestamp assinado, em milissegundos.                                                      |
 
-Duas variáveis ficam fora do `envConfig`: `MEMORY_LIMIT_MB`, lida pelo `HealthService`, e `SEED_ADMIN_EMAIL`/`SEED_ADMIN_PASSWORD`, lidas pelo `prisma/seed.ts`.
+Ficam fora do `envConfig`: `MEMORY_LIMIT_MB`, lida pelo `HealthService`; `npm_package_name`/`npm_package_version`, injetadas pelo pnpm e devolvidas no `GET /api/`; e `SEED_ADMIN_EMAIL`/`SEED_ADMIN_PASSWORD`, lidas pelo `prisma/seed.ts`.
 
 ## Bancos
 

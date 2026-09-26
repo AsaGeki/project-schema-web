@@ -50,7 +50,7 @@ src/
     services/                  LoggerService, HashService
     types/                     response.ts  pagination.ts  filter.ts  audit.ts  global.d.ts
     utils/                     subpasta por domínio, um util por arquivo
-      auth/  files/  http/  pagination/  search/  time/  url/
+      auth/  http/  pagination/  query/  time/
   modules/
     <modulo>/
       dtos/
@@ -70,7 +70,9 @@ utilitário. `configs/` fica fora de `shared/`.
 
 **`envConfig` é o único ponto que lê `process.env`**, e expõe as variáveis agrupadas por domínio
 (`env.server.PORT`, `env.auth.JWT_SECRET`, `env.database.MONGODB_URI`). Quem precisa de configuração
-lê de lá, ou de um `*Config` que derive de lá.
+lê de lá, ou de um `*Config` que derive de lá. Exceções existentes: `MEMORY_LIMIT_MB`, lida pelo
+`HealthService`; `npm_package_name`/`npm_package_version`, que o pnpm injeta e o `GET /api/`
+devolve; e `SEED_ADMIN_*`, lidas pelo `prisma/seed.ts`, que roda fora da aplicação.
 
 Um arquivo em `configs/` só existe quando **faz algo além de repassar variável** — montar o
 callback de origem do CORS, validar um formato, escolher um provedor. Objeto que apenas espelha
@@ -176,8 +178,8 @@ do `execute` — ou por coesão, quando o trecho é grande e distinto o bastante
 separado. Fora desses dois casos a lógica fica dentro do `execute`, que não é um delegador vazio.
 
 **Util não é service.** Função pura, sem dependência injetada, é uma função exportada em `utils/`,
-sem classe e sem `execute`. `shared/utils/` se organiza em subpasta por domínio (`auth/`, `files/`,
-`pagination/`, `search/`, `time/`, `url/`), com uma única funcionalidade por arquivo.
+sem classe e sem `execute`. `shared/utils/` se organiza em subpasta por domínio (hoje `auth/`,
+`http/`, `pagination/`, `query/` e `time/`), com uma única funcionalidade por arquivo.
 
 ## Persistência
 
@@ -275,12 +277,15 @@ O Zod valida campo isoladamente — tipo, obrigatoriedade, tamanho, enum, format
 campos ou depende do banco é regra de negócio e mora no service. Não usar `refine` nem
 `superRefine` para validação cruzada.
 
-Contrato de objeto é `interface` com prefixo `I`, inclusive quando derivado do Zod. Vocabulário
-fechado que chega ao cliente ou ao banco — status de domínio, estado de dependência no health — é
-`enum` com prefixo `E`, validado por `z.enum(EVocabulario)`, nunca união de literais de string: o
-enum existe em runtime, e é dele que saem o `enum` do Mongoose e a validação de lista (`ENodeEnv` no
-`envConfig` segue a mesma regra). O `as` do `filterConfig`, configuração interna, continua em
-literal. `type` fica reservado a união de tipos, alias curto e primitivo nomeado.
+Contrato de objeto é `interface` com prefixo `I`, inclusive quando derivado do Zod.
+
+Vocabulário fechado é `enum` com prefixo `E`, validado por `z.enum(EVocabulario)`, sempre que o
+valor sai do processo — chega ao cliente numa resposta, é gravado no banco ou vem de fora e precisa
+ser validado. Entram aí o status de domínio, o estado de dependência no health e o `ENodeEnv` do
+`envConfig`, que vem do ambiente e sai no `GET /api/`. O enum existe em runtime, e é dele que saem o
+`enum` do Mongoose e a validação de lista. União de literais fica só para opção que nunca deixa o
+código, como o `as` do `filterConfig`. `type` fica reservado a união de tipos, alias curto e
+primitivo nomeado.
 
 Sufixo `DTO`: tipo derivado do Zod ou do Prisma não leva sufixo (`IUser`, `IUserCreate`,
 `IUserPublic`). Interface escrita à mão para o documento persistido do Mongoose, quando não há
