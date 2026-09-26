@@ -192,3 +192,13 @@ export class InternalServerError extends UniversalError {
     super({ ...normalizeErrorInput(options), status: 500 });
   }
 }
+
+/**
+ * Dependência externa fora do ar. Não diz nada sobre a validade da requisição:
+ * quem recebe não deve tratar como 401 nem desfazer a sessão por causa dele.
+ */
+export class ServiceUnavailableError extends UniversalError {
+  constructor(options: TStatusErrorInput = {}) {
+    super({ ...normalizeErrorInput(options), status: 503 });
+  }
+}

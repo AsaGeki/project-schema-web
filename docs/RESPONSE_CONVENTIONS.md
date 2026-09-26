@@ -4,9 +4,9 @@
 | ------------------- | ------------------------------------------------------------ |
 | Prompt summary      | Documentar o contrato de sucesso e de erro na fronteira HTTP |
 | Creation date       | 2026-09-01                                                   |
-| Change count        | 1                                                            |
+| Change count        | 2                                                            |
 | Last update date    | 2026-09-26                                                   |
-| Last prompt summary | Levar a paginação para a raiz do envelope                    |
+| Last prompt summary | Incluir o erro de dependência indisponível                   |
 
 Fonte de verdade: [`src/shared/types/response.ts`](../src/shared/types/response.ts), [`src/shared/infra/https/sendResponse.ts`](../src/shared/infra/https/sendResponse.ts), [`src/shared/errors/UniversalError.ts`](../src/shared/errors/UniversalError.ts) e [`src/shared/infra/https/middlewares/errorMiddleware.ts`](../src/shared/infra/https/middlewares/errorMiddleware.ts).
 
@@ -113,6 +113,7 @@ throw new NotFoundError('Usuário não encontrado.'); // string vira `message`
 | `UnprocessableEntityError`  | 422    |
 | `TooManyRequestsError`      | 429    |
 | `InternalServerError`       | 500    |
+| `ServiceUnavailableError`   | 503    |
 
 ### Corpo do erro
 

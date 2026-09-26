@@ -56,7 +56,7 @@ modules/<nome>/
 | Recurso                     | Onde                                                                |
 | --------------------------- | ------------------------------------------------------------------- |
 | Envelope de resposta único  | `IResponseEx` + `sendResponse`                                      |
-| Erro tipado por status HTTP | `UniversalError` e 11 subclasses, um middleware central             |
+| Erro tipado por status HTTP | `UniversalError` e 12 subclasses, um middleware central             |
 | Validação de entrada        | Zod no `dtos/`, aplicado por middleware; o schema é a fonte do tipo |
 | Filtro e paginação          | `filterConfig` declarativa, traduzida para Prisma ou Mongo          |
 | Log estruturado             | Winston com rotação diária e child logger por contexto              |
