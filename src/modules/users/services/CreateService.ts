@@ -30,7 +30,6 @@ export default class CreateService {
     const created = await this.repository.create({
       ...data,
       password,
-      isAdmin: data.isAdmin ?? false,
       createdBy: authorId ?? null,
     });
 

@@ -15,7 +15,6 @@ export const userSchema = z.object({
     .string({ error: 'Senha deve ser uma string válida' })
     .min(8, 'Senha deve ter no mínimo 8 caracteres')
     .max(120, 'Senha deve ter no máximo 120 caracteres'),
-  isAdmin: z.boolean({ error: 'isAdmin deve ser um boolean válido' }).optional(),
 });
 
 /** Contrato de entrada, derivado do schema para não duplicar campo à mão. */
@@ -24,8 +23,13 @@ export interface IUser extends z.infer<typeof userSchema> {}
 /** O que o repositório grava: a entrada validada mais a autoria. */
 export interface IUserCreate extends IUser, IAuditFields {}
 
-/** Atualização parcial: todo campo é opcional. */
-export const userPartialSchema = userSchema.partial();
+/**
+ * Atualização parcial: todo campo é opcional. `isAdmin` só existe aqui — quem
+ * pode alterá-lo é conferido no `UpdateService`.
+ */
+export const userPartialSchema = userSchema.partial().extend({
+  isAdmin: z.boolean({ error: 'isAdmin deve ser um boolean válido' }).optional(),
+});
 
 export interface IUserPartial extends z.infer<typeof userPartialSchema> {}
 
