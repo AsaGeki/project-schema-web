@@ -47,7 +47,9 @@ export class AppServer {
     // Quantos saltos do X-Forwarded-For são confiáveis. Tem que bater com o
     // número real de proxies na frente: a mais, o cliente escolhe o próprio IP
     // e engana o rate limit; a menos, `req.ip` vira o do proxy para todo mundo.
-    this.server.set('trust proxy', env.server.TRUST_PROXY);
+    // Zero vira `false`: é só com `false` que o express-rate-limit avisa no log
+    // quando chega X-Forwarded-For sem proxy configurado.
+    this.server.set('trust proxy', env.server.TRUST_PROXY || false);
 
     if (env.server.ENABLE_ROUTER_MONITORING) {
       this.server.use(logRouterMiddleware);

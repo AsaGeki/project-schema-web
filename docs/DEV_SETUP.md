@@ -31,25 +31,25 @@ O consumo é agrupado por domínio: `env.server.PORT`, `env.https.CERT`, `env.da
 
 Os nomes seguem o padrão dos backends da empresa (`avb_one_back`, `fbi_back`, `sso_back`), e o [`.env.example`](../.env.example) explica cada variável no próprio arquivo.
 
-| Variável                      | Default         | Observação                                                                                       |
-| ----------------------------- | --------------- | ------------------------------------------------------------------------------------------------ |
-| `NODE_ENV`                    | `development`   | `development`, `production` ou `test`. Controla nível de log, CORS, rate limit e a URI do Mongo. |
-| `PORT`                        | `3000`          |                                                                                                  |
-| `SELF_HOST`                   | `localhost`     | Host deste backend, sem protocolo nem porta. Hoje só compõe a mensagem de boot.                  |
-| `CORS`                        | `*`             | Lista separada por vírgula, ou `*`.                                                              |
-| `JSON_LIMIT`                  | `2mb`           | Corpo maior vira 413.                                                                            |
-| `TRUST_PROXY`                 | `0`             | Número de proxies reversos na frente da API. `0` ignora o `x-forwarded-for`.                     |
-| `ENABLE_ROUTER_MONITORING`    | `false`         | Liga o log por requisição.                                                                       |
-| `HTTPS_KEY` / `HTTPS_CERT`    | vazio           | Preencher os dois sobe o servidor em TLS. `HTTPS_CA` é opcional.                                 |
-| `DATABASE_URL`                | vazio           | Postgres via Prisma, em qualquer ambiente. Vazio desliga.                                        |
-| `MONGODB_URI`                 | vazio           | Mongo em produção.                                                                               |
-| `MONGODB_URI_DEV`             | vazio           | Mongo fora de produção. Vazia a do ambiente atual, a conexão é ignorada, com log em `debug`.     |
-| `JWT_SECRET`                  | **sem default** | Obrigatória.                                                                                     |
-| `JWT_EXPIRES_IN`              | `1d`            |                                                                                                  |
-| `JWT_REFRESH_SECRET`          | **sem default** | Obrigatória, e deve ser diferente de `JWT_SECRET`.                                               |
-| `JWT_REFRESH_EXPIRES_IN`      | `12h`           |                                                                                                  |
-| `API_KEYS_HMAC`               | vazio           | Chaves de integração server-to-server, `id:segredo,id2:segredo2`.                                |
-| `API_KEYS_HMAC_TOLERANCIA_MS` | `300000`        | Janela do timestamp assinado, em milissegundos.                                                  |
+| Variável                      | Default         | Observação                                                                                           |
+| ----------------------------- | --------------- | ---------------------------------------------------------------------------------------------------- |
+| `NODE_ENV`                    | `development`   | `development`, `production` ou `test`. Controla nível de log, CORS, rate limit e a URI do Mongo.     |
+| `PORT`                        | `3000`          |                                                                                                      |
+| `SELF_HOST`                   | `localhost`     | Host deste backend, sem protocolo nem porta. Hoje só compõe a mensagem de boot.                      |
+| `CORS`                        | `*`             | Lista separada por vírgula, ou `*`.                                                                  |
+| `JSON_LIMIT`                  | `2mb`           | Corpo maior vira 413.                                                                                |
+| `TRUST_PROXY`                 | `0`             | Número de proxies reversos na frente da API. `0` ignora o `x-forwarded-for`; atrás de um proxy, `1`. |
+| `ENABLE_ROUTER_MONITORING`    | `false`         | Liga o log por requisição.                                                                           |
+| `HTTPS_KEY` / `HTTPS_CERT`    | vazio           | Preencher os dois sobe o servidor em TLS. `HTTPS_CA` é opcional.                                     |
+| `DATABASE_URL`                | vazio           | Postgres via Prisma, em qualquer ambiente. Vazio desliga.                                            |
+| `MONGODB_URI`                 | vazio           | Mongo em produção.                                                                                   |
+| `MONGODB_URI_DEV`             | vazio           | Mongo fora de produção. Vazia a do ambiente atual, a conexão é ignorada, com log em `debug`.         |
+| `JWT_SECRET`                  | **sem default** | Obrigatória.                                                                                         |
+| `JWT_EXPIRES_IN`              | `1d`            |                                                                                                      |
+| `JWT_REFRESH_SECRET`          | **sem default** | Obrigatória, e deve ser diferente de `JWT_SECRET`.                                                   |
+| `JWT_REFRESH_EXPIRES_IN`      | `12h`           |                                                                                                      |
+| `API_KEYS_HMAC`               | vazio           | Chaves de integração server-to-server, `id:segredo,id2:segredo2`.                                    |
+| `API_KEYS_HMAC_TOLERANCIA_MS` | `300000`        | Janela do timestamp assinado, em milissegundos.                                                      |
 
 Duas variáveis ficam fora do `envConfig`: `MEMORY_LIMIT_MB`, lida pelo `HealthService`, e `SEED_ADMIN_EMAIL`/`SEED_ADMIN_PASSWORD`, lidas pelo `prisma/seed.ts`.
 
