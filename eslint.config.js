@@ -37,7 +37,8 @@ module.exports = [
       parserOptions: {
         // Descobre o tsconfig mais próximo de cada arquivo sozinho, o que liga o
         // lint com informação de tipo (no-floating-promises, no-misused-promises).
-        projectService: true,
+        // O vitest.config.ts fica na raiz, fora do `include` do tsconfig raiz.
+        projectService: { allowDefaultProject: ['vitest.config.ts'] },
         tsconfigRootDir: __dirname,
       },
     },

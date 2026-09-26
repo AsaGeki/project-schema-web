@@ -26,11 +26,14 @@
     "dev": "tsx watch --env-file=.env src/server.ts",
     "build": "tsup src/server.ts --format cjs --clean",
     "start": "node dist/server.js",
-    "typecheck": "tsc --noEmit",
+    "typecheck": "tsc --noEmit && tsc --noEmit -p tests",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
+    "test": "vitest run --project unit",
+    "test:watch": "vitest --project unit",
+    "test:integration": "vitest run --project integration",
     "generate:module": "tsx scripts/generate-module.ts",
     "db:generate": "prisma generate",
     "db:migrate": "prisma migrate dev",
@@ -79,7 +82,8 @@
     "prisma": "^6.19.3",
     "tsup": "^8.5.1",
     "tsx": "^4.21.0",
-    "typescript": "^5.9.0"
+    "typescript": "^5.9.0",
+    "vitest": "4.1.10"
   },
   "prisma": {
     "seed": "tsx prisma/seed.ts"
