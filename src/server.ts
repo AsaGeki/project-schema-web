@@ -30,7 +30,7 @@ async function start(): Promise<void> {
   const protocol = httpsOptions ? 'https' : 'http';
 
   httpServer.listen(env.server.PORT, () => {
-    log.notice(`Servidor no ar em ${protocol}://${env.server.URL}:${env.server.PORT}/api`);
+    log.notice(`Servidor no ar em ${protocol}://${env.server.SELF_HOST}:${env.server.PORT}/api`);
   });
 
   // Encerramento ordenado: para de aceitar conexões antes de fechar o Mongo.

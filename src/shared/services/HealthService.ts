@@ -80,7 +80,7 @@ export default class HealthService {
   }
 
   private checkMongo(): TDependencyStatus {
-    if (!env.database.MONGO_URL) return 'off';
+    if (!env.database.MONGODB_URI) return 'off';
     return mongoose.connection.readyState === mongoose.ConnectionStates.connected ? 'up' : 'down';
   }
 }

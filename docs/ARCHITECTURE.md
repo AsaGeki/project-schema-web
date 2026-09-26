@@ -88,7 +88,7 @@ Os dois módulos de referência mostram os dois lados:
 | `users` | Postgres | `IBaseRepository`  | Entidade com forma fixa e relação; CRUD completo.                |
 | `logs`  | Mongo    | `IMongoRepository` | `payload` de forma variável e ingestão em lote via `insertMany`. |
 
-`MONGO_URL` ou `DATABASE_URL` vazias desligam a respectiva conexão — um projeto que use só um dos bancos não paga o custo do outro.
+`DATABASE_URL` ou a URI do Mongo do ambiente (`MONGODB_URI` em produção, `MONGODB_URI_DEV` fora dela) vazias desligam a respectiva conexão — um projeto que use só um dos bancos não paga o custo do outro.
 
 ## Filtragem declarativa
 

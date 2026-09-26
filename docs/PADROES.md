@@ -67,7 +67,7 @@ Middlewares moram em `shared/infra/https/middlewares/` — middleware é infraes
 utilitário. `configs/` fica fora de `shared/`.
 
 **`envConfig` é o único ponto que lê `process.env`**, e expõe as variáveis agrupadas por domínio
-(`env.server.PORT`, `env.auth.JWT_SECRET`, `env.database.MONGO_URL`). Quem precisa de configuração
+(`env.server.PORT`, `env.auth.JWT_SECRET`, `env.database.MONGODB_URI`). Quem precisa de configuração
 lê de lá, ou de um `*Config` que derive de lá.
 
 Um arquivo em `configs/` só existe quando **faz algo além de repassar variável** — montar o

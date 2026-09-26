@@ -3,7 +3,7 @@ import path from 'path';
 import winston from 'winston';
 import DailyRotateFile from 'winston-daily-rotate-file';
 
-import { env } from '@configs/envConfig';
+import { isProduction } from '@configs/envConfig';
 
 const { combine, timestamp, printf, splat, errors, json } = winston.format;
 
@@ -26,10 +26,9 @@ const customLevels = {
 
 winston.addColors(customLevels.colors);
 
+/** Produção corta até `notice`; fora dela, todos os níveis passam. */
 function resolveLevel(): string {
-  if (env.server.NODE_ENV === 'dev') return 'info';
-  if (env.server.NODE_ENV === 'debug') return 'debug';
-  return 'notice';
+  return isProduction ? 'notice' : 'debug';
 }
 
 const TIMESTAMP_FORMAT = 'DD/MM/YYYY - HH:mm:ss';

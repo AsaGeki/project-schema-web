@@ -43,10 +43,10 @@ export class AppServer {
   }
 
   private setupMiddlewares(): void {
-    // A maioria dos PaaS roda atrás de um proxy reverso que injeta
-    // X-Forwarded-For. Sem isso o rate limit rejeita o header por não confiar
-    // nele, e `req.ip` fica sempre o do proxy.
-    this.server.set('trust proxy', 1);
+    // Quantos saltos do X-Forwarded-For são confiáveis. Tem que bater com o
+    // número real de proxies na frente: a mais, o cliente escolhe o próprio IP
+    // e engana o rate limit; a menos, `req.ip` vira o do proxy para todo mundo.
+    this.server.set('trust proxy', env.server.TRUST_PROXY);
 
     if (env.server.ENABLE_ROUTER_MONITORING) {
       this.server.use(logRouterMiddleware);

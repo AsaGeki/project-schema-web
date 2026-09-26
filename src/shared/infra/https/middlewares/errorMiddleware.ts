@@ -1,6 +1,6 @@
 import { ZodError } from 'zod';
 
-import { env } from '@configs/envConfig';
+import { isProduction } from '@configs/envConfig';
 import { isMongoError, mapMongoError } from '@shared/errors/MongoErrors';
 import { isPrismaError, mapPrismaError } from '@shared/errors/PrismaErrors';
 import {
@@ -56,7 +56,7 @@ export default function errorMiddleware(error: Error, req: Request, res: Respons
     title: 'Erro interno do servidor!',
     message: 'Ocorreu um erro inesperado. Tente novamente mais tarde.',
     // Em produção o erro real não é exposto ao cliente.
-    ...(env.server.NODE_ENV !== 'prod' && { error: error.message }),
+    ...(!isProduction && { error: error.message }),
   });
 }
 

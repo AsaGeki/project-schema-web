@@ -1,7 +1,7 @@
 import { env } from '@configs/envConfig';
 
 /**
- * Chaves de integração server-to-server, lidas de `API_KEYS` no formato
+ * Chaves de integração server-to-server, lidas de `API_KEYS_HMAC` no formato
  * `id:segredo,id2:segredo2`. Entrada malformada é descartada em silêncio — uma
  * chave incompleta não deve virar credencial parcial válida.
  */
@@ -17,6 +17,6 @@ function parseKeys(raw: string): Record<string, string> {
 }
 
 export const apiKeysConfig = {
-  keys: parseKeys(env.apiKeys.API_KEYS),
-  toleranceMs: env.apiKeys.TOLERANCE_MS,
+  keys: parseKeys(env.apiKeys.API_KEYS_HMAC),
+  toleranceMs: env.apiKeys.TOLERANCIA_MS,
 };
