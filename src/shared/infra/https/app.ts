@@ -1,6 +1,7 @@
 import http from 'http';
 import https from 'https';
 
+import compression from 'compression';
 import cors from 'cors';
 import express from 'express';
 import helmet from 'helmet';
@@ -55,6 +56,9 @@ export class AppServer {
     // CSP desligada: a API só serve JSON, e a política default quebraria uma
     // futura UI de documentação servida pelo próprio processo.
     this.server.use(helmet({ contentSecurityPolicy: false }));
+
+    // Comprime com gzip/deflate conforme o Accept-Encoding; resposta abaixo de 1 KB sai crua.
+    this.server.use(compression());
 
     // Limite global brando; rota sensível declara o próprio, mais apertado.
     this.server.use(createRateLimiter({ windowMs: FIFTEEN_MINUTES_MS, limit: 300 }));

@@ -61,6 +61,7 @@ modules/<nome>/
 | Filtro e paginação          | `filterConfig` declarativa, traduzida para Prisma ou Mongo          |
 | Log estruturado             | Winston com rotação diária e child logger por contexto              |
 | Segurança                   | Helmet, CORS por ambiente, rate limit, `Content-Type` obrigatório   |
+| Compressão de resposta      | `compression` no `AppServer`, conforme o `Accept-Encoding`          |
 | Autenticação                | JWT com access e refresh, `req.user` populado por middleware        |
 | Auditoria                   | `createdBy`/`updatedBy` no contrato de escrita dos repositórios     |
 
