@@ -35,6 +35,6 @@ export default class UsersRepository
   }
 
   public async findByEmailWithPassword(email: string): Promise<User | null> {
-    return prisma.user.findUnique({ where: { email } });
+    return prisma.user.findUnique({ where: { email }, omit: { password: false } });
   }
 }
