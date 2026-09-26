@@ -4,9 +4,9 @@
 | ------------------- | ------------------------------------------------------------------- |
 | Prompt summary      | Registrar o porquê de cada decisão arquitetural, não só o que ela é |
 | Creation date       | 2026-09-01                                                          |
-| Change count        | 0                                                                   |
-| Last update date    | 2026-09-01                                                          |
-| Last prompt summary | Registrar o porquê de cada decisão arquitetural, não só o que ela é |
+| Change count        | 1                                                                   |
+| Last update date    | 2026-09-26                                                          |
+| Last prompt summary | Registrar a paginação na raiz do envelope                           |
 
 [`PADROES.md`](PADROES.md) diz **o que** é o padrão e [`ARCHITECTURE.md`](ARCHITECTURE.md) diz **como** montar um módulo. Este documento diz **por quê**, e o que cada escolha custa.
 
@@ -57,6 +57,16 @@ O efeito colateral é o que mais importa na prática: **o arquivo pequeno resist
 Com o envelope, o status é campo obrigatório do retorno do service — não dá para esquecer, porque o tipo exige. E convenção que vale para a API inteira (corpo vazio no 204, `Location` no 201, cookie de refresh) entra num arquivo só, em vez de ser replicada em cada controller.
 
 **Custo.** O service passa a conhecer status HTTP, o que é uma concessão: uma regra de negócio pura não deveria saber o que é 409. A alternativa — o controller decidir o status — devolve o problema para o lugar onde ele se perde.
+
+---
+
+## Paginação na raiz do envelope
+
+**Decisão.** `page`, `limit`, `total`, `totalPages` e `hasNext` saem na raiz do corpo, ao lado de `data`, e não num objeto `meta`.
+
+**Por quê.** É o formato que os fronts da empresa já leem nas APIs em produção (`avb_one_back`, `fbi_back`). Uma API nova nascida deste schema responde no formato que o cliente já espera, sem adaptador. `hasNext` vem pronto para o cliente não recalcular a partir de `page` e `totalPages`.
+
+**Custo.** O envelope não tem namespace para controle: todo campo novo de controle divide a raiz com os de paginação, e quem lê a resposta só sabe que ela é paginada pela presença desses campos.
 
 ---
 

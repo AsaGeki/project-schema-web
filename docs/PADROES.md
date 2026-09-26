@@ -199,19 +199,29 @@ Nenhum service escreve encadeamento de `if` sobre a query.
 ## Resposta HTTP
 
 ```ts
-export interface IResponseEx<T = unknown> {
+export interface IPaginationMeta {
+  page: number;
+  limit: number;
+  total: number;
+  totalPages: number;
+  hasNext: boolean;
+}
+
+/** Campos de paginação ficam na raiz do envelope, ao lado de `data`, não aninhados. */
+export interface IResponseEx<T = unknown> extends Partial<IPaginationMeta> {
   success: boolean;
   status: number;
   message?: string;
   data?: T;
-  meta?: IPaginationMeta;
+  /** Headers extras a setar na resposta — o `sendResponse` aplica. */
   headers?: Record<string, string>;
 }
 ```
 
 Todo service chamado por controller devolve esse envelope. `sendResponse` é o tradutor único:
-aplica o status na linha de status, os headers extras, e monta o corpo
-`{ success, message, data, meta }`. Respostas 204 e 304 saem sem corpo.
+aplica o status na linha de status, os headers extras, e monta o corpo com o resto do envelope,
+com `page`, `limit`, `total`, `totalPages` e `hasNext` na raiz quando a resposta é paginada.
+Respostas 204 e 304 saem sem corpo.
 
 Erro nunca volta como `success: false` a partir do service — erro se lança.
 

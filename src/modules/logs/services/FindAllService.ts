@@ -27,8 +27,8 @@ export default class FindAllService {
       throw new ForbiddenError({ message: 'Você não tem permissão para consultar os logs.' });
     }
 
-    const { items, meta } = await this.repository.list(query);
+    const { items, ...paginacao } = await this.repository.list(query);
 
-    return { success: true, status: 200, data: items, meta };
+    return { success: true, status: 200, data: items, ...paginacao };
   }
 }

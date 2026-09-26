@@ -1,6 +1,7 @@
 import type { IBaseRepository } from '@shared/infra/database/IBaseRepository';
 import type { IFilterConfig } from '@shared/types/filter';
 import type { IListQuery, IPaginated, IPaginationParams } from '@shared/types/pagination';
+import { buildPaginationMeta } from '@shared/utils/pagination/buildPaginationMeta';
 import { buildPrismaWhere } from '@shared/utils/query/buildPrismaWhere';
 
 /**
@@ -80,7 +81,7 @@ export default abstract class BasePrismaRepository<
     return this.paginate(where, { page: query.page, limit: query.limit });
   }
 
-  /** Recebe o `where` já montado, devolve os itens da página + os metadados. */
+  /** Recebe o `where` já montado, devolve os itens da página e os campos de paginação. */
   protected async paginate(
     where: unknown,
     { page, limit }: IPaginationParams,
@@ -97,7 +98,7 @@ export default abstract class BasePrismaRepository<
       this.delegate.count({ where }),
     ]);
 
-    return { items, meta: { page, limit, total, totalPages: Math.ceil(total / limit) } };
+    return { items, ...buildPaginationMeta(page, limit, total) };
   }
 
   /**

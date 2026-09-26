@@ -10,14 +10,15 @@ export interface IPaginationMeta {
   limit: number;
   total: number;
   totalPages: number;
+  hasNext: boolean;
 }
 
-export interface IResponseEx<T = unknown> {
+/** Campos de paginação ficam na raiz do envelope, ao lado de `data`, não aninhados. */
+export interface IResponseEx<T = unknown> extends Partial<IPaginationMeta> {
   success: boolean;
   status: number;
   message?: string;
   data?: T;
-  meta?: IPaginationMeta;
   /** Headers extras a setar na resposta — o `sendResponse` aplica. */
   headers?: Record<string, string>;
 }

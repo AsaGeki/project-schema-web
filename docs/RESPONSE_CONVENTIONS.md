@@ -4,9 +4,9 @@
 | ------------------- | ------------------------------------------------------------ |
 | Prompt summary      | Documentar o contrato de sucesso e de erro na fronteira HTTP |
 | Creation date       | 2026-09-01                                                   |
-| Change count        | 0                                                            |
-| Last update date    | 2026-09-01                                                   |
-| Last prompt summary | Documentar o contrato de sucesso e de erro na fronteira HTTP |
+| Change count        | 1                                                            |
+| Last update date    | 2026-09-26                                                   |
+| Last prompt summary | Levar a paginação para a raiz do envelope                    |
 
 Fonte de verdade: [`src/shared/types/response.ts`](../src/shared/types/response.ts), [`src/shared/infra/https/sendResponse.ts`](../src/shared/infra/https/sendResponse.ts), [`src/shared/errors/UniversalError.ts`](../src/shared/errors/UniversalError.ts) e [`src/shared/infra/https/middlewares/errorMiddleware.ts`](../src/shared/infra/https/middlewares/errorMiddleware.ts).
 
@@ -15,17 +15,26 @@ Fonte de verdade: [`src/shared/types/response.ts`](../src/shared/types/response.
 Service chamado por controller devolve o envelope, não o dado puro:
 
 ```ts
-export interface IResponseEx<T = unknown> {
+export interface IPaginationMeta {
+  page: number;
+  limit: number;
+  total: number;
+  totalPages: number;
+  hasNext: boolean;
+}
+
+/** Campos de paginação ficam na raiz do envelope, ao lado de `data`, não aninhados. */
+export interface IResponseEx<T = unknown> extends Partial<IPaginationMeta> {
   success: boolean;
   status: number;
   message?: string;
   data?: T;
-  meta?: IPaginationMeta;
+  /** Headers extras a setar na resposta — o `sendResponse` aplica. */
   headers?: Record<string, string>;
 }
 ```
 
-O `sendResponse` fragmenta isso nas camadas certas do HTTP: `status` vai para a linha de status e **não** se repete no corpo; `headers` é aplicado na resposta; o corpo sai como `{ success, message, data, meta }`.
+O `sendResponse` fragmenta isso nas camadas certas do HTTP: `status` vai para a linha de status e **não** se repete no corpo; `headers` é aplicado na resposta; o corpo sai como o resto do envelope — `{ success, message, data }` e, em listagem, os campos de paginação na raiz.
 
 ```ts
 public async create(req: Request, res: Response): Promise<Response> {
@@ -48,14 +57,18 @@ public async create(req: Request, res: Response): Promise<Response> {
 
 ### Listagem
 
-`meta` só aparece em resposta paginada, e vem do repositório — o service não calcula página.
+Os campos de paginação só aparecem em resposta paginada, na raiz, e vêm do repositório — o service não calcula página. `hasNext` é `page < totalPages`; coleção vazia dá `totalPages: 0` e `hasNext: false`.
 
 ```jsonc
 // HTTP 200 — GET /api/users?page=2&limit=20&search=arthur
 {
   "success": true,
   "data": [/* ... */],
-  "meta": { "page": 2, "limit": 20, "total": 47, "totalPages": 3 },
+  "page": 2,
+  "limit": 20,
+  "total": 47,
+  "totalPages": 3,
+  "hasNext": true,
 }
 ```
 

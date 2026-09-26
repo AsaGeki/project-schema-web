@@ -1,6 +1,7 @@
 import type { IMongoRepository } from '@shared/infra/database/IBaseRepository';
 import type { IFilterConfig } from '@shared/types/filter';
 import type { IListQuery, IPaginated, IPaginationParams } from '@shared/types/pagination';
+import { buildPaginationMeta } from '@shared/utils/pagination/buildPaginationMeta';
 import { buildMongoWhere } from '@shared/utils/query/buildMongoWhere';
 
 import type { Document, FilterQuery, Model, PopulateOptions, UpdateQuery } from 'mongoose';
@@ -97,7 +98,7 @@ export default abstract class BaseMongoRepository<
     await this.model.bulkWrite(operations as never);
   }
 
-  /** Recebe o filtro já montado, devolve os itens da página + os metadados. */
+  /** Recebe o filtro já montado, devolve os itens da página e os campos de paginação. */
   protected async paginate(
     filter: FilterQuery<TModel>,
     { page, limit }: IPaginationParams,
@@ -114,6 +115,6 @@ export default abstract class BaseMongoRepository<
       this.model.countDocuments(filter).exec(),
     ]);
 
-    return { items, meta: { page, limit, total, totalPages: Math.ceil(total / limit) } };
+    return { items, ...buildPaginationMeta(page, limit, total) };
   }
 }

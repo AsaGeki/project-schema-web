@@ -7,10 +7,9 @@ export interface IPaginationParams {
   limit: number;
 }
 
-/** Página de resultados de um repositório: itens + metadados de paginação. */
-export interface IPaginated<T> {
+/** Página de resultados de um repositório: os itens e os campos de paginação, prontos para o spread no `IResponseEx`. */
+export interface IPaginated<T> extends IPaginationMeta {
   items: T[];
-  meta: IPaginationMeta;
 }
 
 /**
