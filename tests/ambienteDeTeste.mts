@@ -1,5 +1,5 @@
 import fs from 'fs';
-import path from 'path';
+import { fileURLToPath } from 'url';
 
 /** Segredos só dos testes: nenhum teste depende do `.env` para o `envConfig` validar. */
 export const SEGREDOS_DE_TESTE = {
@@ -14,7 +14,7 @@ export const SEGREDOS_DE_TESTE = {
 export function lerVariavel(nome: string): string | undefined {
   if (process.env[nome]) return process.env[nome];
 
-  const arquivo = path.resolve(__dirname, '..', '.env');
+  const arquivo = fileURLToPath(new URL('../.env', import.meta.url));
   if (!fs.existsSync(arquivo)) return undefined;
 
   const linha = fs

@@ -28,7 +28,7 @@ module.exports = [
   },
 
   {
-    files: ['**/*.ts', '**/*.d.ts'],
+    files: ['**/*.ts', '**/*.mts', '**/*.d.ts'],
     languageOptions: {
       ecmaVersion: 'latest',
       sourceType: 'module',
@@ -37,8 +37,8 @@ module.exports = [
       parserOptions: {
         // Descobre o tsconfig mais próximo de cada arquivo sozinho, o que liga o
         // lint com informação de tipo (no-floating-promises, no-misused-promises).
-        // O vitest.config.ts fica na raiz, fora do `include` do tsconfig raiz.
-        projectService: { allowDefaultProject: ['vitest.config.ts'] },
+        // O vitest.config.mts fica na raiz, fora do `include` do tsconfig raiz.
+        projectService: { allowDefaultProject: ['vitest.config.mts'] },
         tsconfigRootDir: __dirname,
       },
     },

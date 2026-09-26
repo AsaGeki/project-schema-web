@@ -1,9 +1,10 @@
 import { execFileSync } from 'child_process';
+import { createRequire } from 'module';
 import path from 'path';
 
 import mongoose from 'mongoose';
 
-import { urlsDeTeste } from './ambienteDeTeste';
+import { urlsDeTeste } from './ambienteDeTeste.mjs';
 
 /**
  * Antes da suíte: zera o Postgres de teste e aplica o `schema.prisma` do zero.
@@ -11,6 +12,7 @@ import { urlsDeTeste } from './ambienteDeTeste';
  */
 export function setup(): void {
   const { databaseUrl } = urlsDeTeste();
+  const require = createRequire(import.meta.url);
   const prismaCli = path.join(path.dirname(require.resolve('prisma/package.json')), 'build', 'index.js');
 
   execFileSync(process.execPath, [prismaCli, 'db', 'push', '--force-reset', '--skip-generate'], {

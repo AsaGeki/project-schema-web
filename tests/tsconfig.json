@@ -4,5 +4,5 @@
     "rootDir": "..",
     "noEmit": true
   },
-  "include": ["./**/*.ts", "../vitest.config.ts"]
+  "include": ["./**/*.ts", "./**/*.mts", "../vitest.config.mts"]
 }

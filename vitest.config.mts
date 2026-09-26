@@ -1,14 +1,14 @@
-import path from 'path';
+import { fileURLToPath } from 'url';
 
 import { defineConfig } from 'vitest/config';
 
-import { lerVariavel, SEGREDOS_DE_TESTE } from './tests/ambienteDeTeste';
+import { lerVariavel, SEGREDOS_DE_TESTE } from './tests/ambienteDeTeste.mjs';
 
 // Espelha os `paths` do tsconfig.json.
 const alias = {
-  '@configs': path.resolve(__dirname, 'src/configs'),
-  '@shared': path.resolve(__dirname, 'src/shared'),
-  '@modules': path.resolve(__dirname, 'src/modules'),
+  '@configs': fileURLToPath(new URL('./src/configs', import.meta.url)),
+  '@shared': fileURLToPath(new URL('./src/shared', import.meta.url)),
+  '@modules': fileURLToPath(new URL('./src/modules', import.meta.url)),
 };
 
 export default defineConfig({
@@ -32,7 +32,7 @@ export default defineConfig({
         test: {
           name: 'integration',
           include: ['src/**/*.integration.test.ts'],
-          globalSetup: ['./tests/globalSetupIntegracao.ts'],
+          globalSetup: ['./tests/globalSetupIntegracao.mts'],
           // Um arquivo por vez: o Mongoose tem uma conexão padrão só por processo.
           fileParallelism: false,
           env: {
