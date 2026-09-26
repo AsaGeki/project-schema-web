@@ -12,7 +12,8 @@ const log = logger.child({ prefix: 'mongo' });
  */
 export async function connectMongo(): Promise<void> {
   if (!env.database.MONGODB_URI) {
-    log.debug('URI do Mongo vazia — conexão com o Mongo ignorada.');
+    // Em `notice` para aparecer em produção: só a `_DEV` preenchida desliga o Mongo lá sem outro sinal.
+    log.notice('URI do Mongo vazia — conexão com o Mongo ignorada.');
     return;
   }
 
