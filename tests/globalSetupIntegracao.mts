@@ -7,7 +7,8 @@ import mongoose from 'mongoose';
 import { urlsDeTeste } from './ambienteDeTeste.mjs';
 
 /**
- * Antes da suíte: zera o Postgres de teste e aplica o `schema.prisma` do zero.
+ * Antes da suíte: aplica o `schema.prisma` no Postgres de teste, criando o banco
+ * se ainda não existir. Não apaga dados — cada teste limpa as tabelas que usa.
  * `urlsDeTeste` falha antes daqui quando a URL não é de um banco `_test`.
  */
 export function setup(): void {
@@ -15,7 +16,7 @@ export function setup(): void {
   const require = createRequire(import.meta.url);
   const prismaCli = path.join(path.dirname(require.resolve('prisma/package.json')), 'build', 'index.js');
 
-  execFileSync(process.execPath, [prismaCli, 'db', 'push', '--force-reset', '--skip-generate'], {
+  execFileSync(process.execPath, [prismaCli, 'db', 'push', '--skip-generate'], {
     env: { ...process.env, DATABASE_URL: databaseUrl },
     stdio: 'inherit',
   });

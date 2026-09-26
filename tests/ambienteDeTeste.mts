@@ -30,9 +30,10 @@ function nomeDoBanco(url: string): string {
 }
 
 /**
- * URLs dos bancos da integração, conferidas antes de qualquer escrita: o global
- * setup zera o Postgres e remove o Mongo apontados aqui. Recusa URL ausente,
- * igual à de desenvolvimento, ou de banco cujo nome não termina em `_test`.
+ * URLs dos bancos da integração, conferidas antes de qualquer escrita: os testes
+ * apagam registros no Postgres e o global setup remove o Mongo apontados aqui.
+ * Recusa URL ausente, igual à de desenvolvimento, ou de banco cujo nome não
+ * termina em `_test`.
  */
 export function urlsDeTeste(): { databaseUrl: string; mongoUri: string } {
   const databaseUrl = lerVariavel('DATABASE_URL_TEST');
