@@ -239,8 +239,12 @@ O Zod valida campo isoladamente — tipo, obrigatoriedade, tamanho, enum, format
 campos ou depende do banco é regra de negócio e mora no service. Não usar `refine` nem
 `superRefine` para validação cruzada.
 
-Contrato de objeto é `interface` com prefixo `I`, inclusive quando derivado do Zod. `type` fica
-reservado a união, alias curto e primitivo nomeado.
+Contrato de objeto é `interface` com prefixo `I`, inclusive quando derivado do Zod. Vocabulário
+fechado que chega ao cliente ou ao banco — status de domínio, estado de dependência no health — é
+`enum` com prefixo `E`, validado por `z.enum(EVocabulario)`, nunca união de literais de string: o
+enum existe em runtime, e é dele que saem o `enum` do Mongoose e a validação de lista (`ENodeEnv` no
+`envConfig` segue a mesma regra). O `as` do `filterConfig`, configuração interna, continua em
+literal. `type` fica reservado a união de tipos, alias curto e primitivo nomeado.
 
 Nomes no singular dentro de `dtos/`.
 

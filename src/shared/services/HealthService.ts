@@ -8,11 +8,20 @@ import { prisma } from '@configs/database/prismaClient';
 import { env } from '@configs/envConfig';
 import { formatDuration } from '@shared/utils/time/formatDuration';
 
-/** Estado de uma dependência externa. `off` significa que ela não foi configurada. */
-export type TDependencyStatus = 'up' | 'down' | 'off';
+/** Estado de uma dependência externa. `OFF` significa que ela não foi configurada. */
+export enum EDependencyStatus {
+  UP = 'up',
+  DOWN = 'down',
+  OFF = 'off',
+}
+
+export enum EHealthStatus {
+  OK = 'ok',
+  DEGRADED = 'degraded',
+}
 
 export interface IAppHealth {
-  status: 'ok' | 'degraded';
+  status: EHealthStatus;
   uptimeSeconds: number;
   uptimeText: string;
   eventLoopLagMs: number;
@@ -20,8 +29,8 @@ export interface IAppHealth {
   memoryLimitMb: number;
   memoryPercent: number;
   dependencies: {
-    postgres: TDependencyStatus;
-    mongo: TDependencyStatus;
+    postgres: EDependencyStatus;
+    mongo: EDependencyStatus;
   };
 }
 
@@ -53,10 +62,10 @@ export default class HealthService {
     const lagMs = this.eventLoopDelay.mean / NANOSECONDS_IN_MS;
 
     // Dependência configurada e fora do ar degrada a aplicação; desligada, não.
-    const isDegraded = postgres === 'down' || mongo === 'down';
+    const isDegraded = postgres === EDependencyStatus.DOWN || mongo === EDependencyStatus.DOWN;
 
     return {
-      status: isDegraded ? 'degraded' : 'ok',
+      status: isDegraded ? EHealthStatus.DEGRADED : EHealthStatus.OK,
       uptimeSeconds,
       uptimeText: formatDuration(uptimeSeconds),
       eventLoopLagMs: Number.isFinite(lagMs) ? Number(lagMs.toFixed(2)) : 0,
@@ -68,19 +77,21 @@ export default class HealthService {
   }
 
   /** Consulta trivial: confirma que o pool responde, não só que a URL existe. */
-  private async checkPostgres(): Promise<TDependencyStatus> {
-    if (!env.database.DATABASE_URL) return 'off';
+  private async checkPostgres(): Promise<EDependencyStatus> {
+    if (!env.database.DATABASE_URL) return EDependencyStatus.OFF;
 
     try {
       await prisma.$queryRaw`SELECT 1`;
-      return 'up';
+      return EDependencyStatus.UP;
     } catch {
-      return 'down';
+      return EDependencyStatus.DOWN;
     }
   }
 
-  private checkMongo(): TDependencyStatus {
-    if (!env.database.MONGODB_URI) return 'off';
-    return mongoose.connection.readyState === mongoose.ConnectionStates.connected ? 'up' : 'down';
+  private checkMongo(): EDependencyStatus {
+    if (!env.database.MONGODB_URI) return EDependencyStatus.OFF;
+    return mongoose.connection.readyState === mongoose.ConnectionStates.connected
+      ? EDependencyStatus.UP
+      : EDependencyStatus.DOWN;
   }
 }

@@ -4,7 +4,7 @@ import { container } from 'tsyringe';
 import { env } from '@configs/envConfig';
 import { verifyApiKey } from '@shared/infra/https/middlewares/verifyApiKeyMiddleware';
 import { sendResponse } from '@shared/infra/https/sendResponse';
-import HealthService from '@shared/services/HealthService';
+import HealthService, { EHealthStatus } from '@shared/services/HealthService';
 
 import type { Request, Response } from 'express';
 
@@ -33,8 +33,8 @@ appRoute.get('/health', async (_req: Request, res: Response): Promise<Response> 
   const health = await container.resolve(HealthService).snapshot();
 
   return sendResponse(res, {
-    success: health.status === 'ok',
-    status: health.status === 'ok' ? 200 : 503,
+    success: health.status === EHealthStatus.OK,
+    status: health.status === EHealthStatus.OK ? 200 : 503,
     data: health,
   });
 });
