@@ -93,10 +93,14 @@ Service leva o sufixo `Service` (`CreateService.ts`, nunca `Create.service.ts`).
 classes usa named export — é o caso de `UniversalError.ts`, que reúne a classe base e as
 subclasses por status. Nunca declarar a classe e exportá-la numa linha separada no fim do arquivo.
 
-**Nome de classe de service.** Operação de CRUD recebe nome genérico e o contexto vem da pasta:
-`services/caixinha/CreateService.ts`. Ação própria do domínio recebe nome descritivo:
-`CreateAporteService`, `GetSaldoService`, `EnviarFormalizacaoService`, `SyncGroupMetadataService`,
-`AppendSlagSplashingSampleService`.
+**Nome de classe de service.** Operação de CRUD recebe nome genérico e o contexto vem da pasta.
+Ação própria do domínio recebe nome descritivo: `CreateAporteService`, `GetSaldoService`,
+`EnviarFormalizacaoService`, `SyncGroupMetadataService`, `AppendSlagSplashingSampleService`.
+
+**Pasta de service.** Módulo com um recurso tem os services planos em `services/`
+(`modules/users/services/CreateService.ts`). Módulo com mais de um recurso tem uma subpasta por
+recurso (`modules/financeiro/services/caixinha/CreateService.ts`). Ação de domínio sem CRUD fica
+direto em `services/`.
 
 **Nome de classe e nome de arquivo sempre coincidem.**
 
@@ -192,9 +196,22 @@ Recursos exclusivos de cada banco ficam em interfaces de extensão (`IMongoRepos
 `bulkUpsert`, `insertMany`; `IPrismaRepository` com `transaction`). Um módulo que depende da
 extensão está declaradamente amarrado àquele banco, e isso fica visível na assinatura.
 
+**Porta e adaptador vale para toda dependência trocável**, não só repositório: cache, storage,
+client de API externa. A interface fica em `repositories/` do módulo, ou em
+`shared/infra/<assunto>/I<Nome>.ts` quando é transversal; a implementação fica em
+`infra/<tecnologia>/`. O service depende da interface por token. Pasta de papel solta na raiz do
+módulo (`cache/` ao lado de `services/`) quebra esse par e esconde a fronteira entre contrato e
+detalhe.
+
 A filtragem da listagem é declarativa: o repositório concreto declara `filterConfig` — com
 `equals`, `search` e `range` —, e a base traduz para `where` do Prisma ou para filtro do Mongo.
 Nenhum service escreve encadeamento de `if` sobre a query.
+
+Quando o `search` de uma listagem precisa resolver algo em outro módulo antes de filtrar — achar os
+ids de autor cujo nome casa com o termo, por exemplo —, a decisão fica no `FindAllService`: ele
+consulta o outro módulo pela interface e passa o resultado ao `list` pelo `scope`. O repositório
+continua só com `filterConfig`. Repositório que ganha parâmetro para receber um filtro pronto é sinal
+de que a decisão devia estar no service.
 
 ## Resposta HTTP
 
@@ -255,6 +272,12 @@ fechado que chega ao cliente ou ao banco — status de domínio, estado de depen
 enum existe em runtime, e é dele que saem o `enum` do Mongoose e a validação de lista (`ENodeEnv` no
 `envConfig` segue a mesma regra). O `as` do `filterConfig`, configuração interna, continua em
 literal. `type` fica reservado a união de tipos, alias curto e primitivo nomeado.
+
+Sufixo `DTO`: tipo derivado do Zod ou do Prisma não leva sufixo (`IUser`, `IUserCreate`,
+`IUserPublic`). Interface escrita à mão para o documento persistido do Mongoose, quando não há
+schema Zod de onde derivar, leva `DTO` (`ICounterDTO`), e o documento do Mongoose a estende. Shape
+de resposta ou de outro sistema é nomeado pelo papel (`IUserPublic`, `IClienteResumo`), nunca com
+`DTO`.
 
 Nomes no singular dentro de `dtos/`.
 

@@ -134,7 +134,7 @@ Regra de papel (`isAdmin`) mora no **service**, não em middleware de rota. `Fin
 1. `dtos/<Nome>DTO.ts` — schema Zod, `IX` derivado dele, `IXCreate`/`IXUpdate` compondo `IAuditFields`.
 2. `repositories/I<Nome>Repository.ts` — estende `IBaseRepository` (ou a extensão do banco).
 3. `infra/prisma/repositories/` ou `infra/mongo/{models,repositories}/` — a implementação, com `filterConfig`.
-4. `services/` — um arquivo por ação.
+4. `services/` — um arquivo por ação; subpasta por recurso quando o módulo tem mais de um.
 5. `infra/https/controllers/<Nome>Controller.ts` — fino.
 6. `infra/https/routes/<nome>Route.ts` — `new Controller()`, métodos registrados diretamente.
 7. `container/index.ts` — registra o token.
