@@ -4,9 +4,9 @@
 | ------------------- | ------------------------------------------------------------------- |
 | Prompt summary      | Registrar o porquê de cada decisão arquitetural, não só o que ela é |
 | Creation date       | 2026-09-01                                                          |
-| Change count        | 2                                                                   |
+| Change count        | 3                                                                   |
 | Last update date    | 2026-09-26                                                          |
-| Last prompt summary | Registrar as exceções de leitura de ambiente                        |
+| Last prompt summary | Registrar a adoção do vitest                                        |
 
 [`PADROES.md`](PADROES.md) diz **o que** é o padrão e [`ARCHITECTURE.md`](ARCHITECTURE.md) diz **como** montar um módulo. Este documento diz **por quê**, e o que cada escolha custa.
 
@@ -164,9 +164,22 @@ A segunda metade da regra existe porque o repasse puro dá a ilusão de configur
 
 ---
 
+## Vitest, com o teste ao lado do código e integração em banco próprio
+
+**Decisão.** Vitest em dois projetos: `pnpm test` roda os `*.test.ts` sem banco, e `pnpm test:integration` roda os `*.integration.test.ts` contra `DATABASE_URL_TEST` e `MONGODB_URI_TEST`. O teste fica ao lado do arquivo testado e é versionado.
+
+**Por quê.** Até aqui a verificação era manual — `curl` contra o servidor rodando e scripts avulsos —, e o que ela provava sumia no fim da sessão. Dois defeitos reais passaram assim: o cadastro público criava administrador, e toda resposta de usuário devolvia o hash da senha, porque a projeção protegia só o `findByEmail`. Os dois têm hoje um teste que falha se voltarem.
+
+A separação existe porque os dois tipos de teste custam coisas diferentes. O unitário roda em segundos, sem nada no ar, e cabe em toda mudança. O de integração é o único que prova o que depende do banco de verdade — o `omit` do Prisma, a atomicidade do `$inc` no Mongo, a tradução do `filterConfig` —, e por isso exige banco próprio. A trava de nome `_test` existe porque esse projeto apaga dados: uma URL de desenvolvimento no lugar errado não pode virar perda de dado.
+
+Vitest, e não Jest, porque é o que os backends da empresa já usam, na mesma versão, e porque roda TypeScript e os aliases do tsconfig sem transpilação à parte.
+
+**Custo.** Duas variáveis de ambiente a mais e dois bancos de teste locais para quem roda a integração. O teste HTTP reimporta a aplicação a cada cenário, porque o `envConfig` é lido no import, e precisa remover os models do Mongoose antes de cada reimport.
+
+---
+
 ## O que este schema deliberadamente não tem
 
-- **Framework de teste.** Não configurado, e não por esquecimento — ver [`CLAUDE.md`](../CLAUDE.md).
 - **Spec OpenAPI.** O projeto não gera nem valida contrato de API.
 - **Autenticação completa.** Há verificação de token, mas não há login, refresh nem revogação — o módulo `users` é referência de padrão, não de produto.
-- **Soft delete, cache e cron.** Existem nos projetos que originaram este padrão. Não foram trazidos porque cada um carrega decisões próprias, que merecem ser tomadas no projeto que precisar deles.
+- **Soft delete e cron.** Existem nos projetos que originaram este padrão. Não foram trazidos porque cada um carrega decisões próprias, que merecem ser tomadas no projeto que precisar deles.

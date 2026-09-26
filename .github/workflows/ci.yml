@@ -8,6 +8,33 @@ jobs:
   ci:
     runs-on: ubuntu-latest
 
+    # Bancos só da integração: nascem vazios a cada execução.
+    services:
+      postgres:
+        image: postgres:18
+        env:
+          POSTGRES_PASSWORD: postgres
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+      mongo:
+        image: mongo:8
+        ports:
+          - 27017:27017
+        options: >-
+          --health-cmd "mongosh --quiet --eval 'db.runCommand({ ping: 1 }).ok'"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+
+    env:
+      DATABASE_URL_TEST: postgresql://postgres:postgres@localhost:5432/project_schema_test
+      MONGODB_URI_TEST: mongodb://localhost:27017/project_schema_test
+
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -41,3 +68,9 @@ jobs:
 
       - name: Build
         run: pnpm build
+
+      - name: Testes unitários e HTTP
+        run: pnpm test
+
+      - name: Testes de integração
+        run: pnpm test:integration

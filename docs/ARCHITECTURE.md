@@ -4,9 +4,9 @@
 | ------------------- | ------------------------------------------------------------------ |
 | Prompt summary      | Documentar a arquitetura do schema base após a reescrita do `src/` |
 | Creation date       | 2026-09-01                                                         |
-| Change count        | 4                                                                  |
+| Change count        | 5                                                                  |
 | Last update date    | 2026-09-26                                                         |
-| Last prompt summary | Registrar o omit global de campo sensível no checklist             |
+| Last prompt summary | Incluir o teste no checklist de módulo novo                        |
 
 Contrato e nomenclatura estão em [`PADROES.md`](PADROES.md); o porquê de cada escolha, e o que ela custa, está em [`DECISOES.md`](DECISOES.md). Este documento cobre camadas, direção de dependência e o que precisa existir para um módulo novo funcionar.
 
@@ -139,6 +139,7 @@ Regra de papel (`isAdmin`) mora no **service**, não em middleware de rota. `Fin
 6. `infra/https/routes/<nome>Route.ts` — `new Controller()`, métodos registrados diretamente.
 7. `container/index.ts` — registra o token.
 8. Importar o container no `shared/container/index.ts` e a rota no `shared/infra/https/routes/router.ts`.
+9. `services/<Acao>Service.test.ts` — teste do service com o repositório mockado; `*.integration.test.ts` no repositório quando o comportamento depende do banco real.
 
 ## Anti-padrões
 

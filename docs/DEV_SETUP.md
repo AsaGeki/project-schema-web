@@ -4,9 +4,9 @@
 | ------------------- | -------------------------------------------------- |
 | Prompt summary      | Documentar como levantar o ambiente do schema base |
 | Creation date       | 2026-09-01                                         |
-| Change count        | 3                                                  |
+| Change count        | 4                                                  |
 | Last update date    | 2026-09-26                                         |
-| Last prompt summary | Registrar as exceções de leitura de ambiente       |
+| Last prompt summary | Documentar a suíte de testes com vitest            |
 
 ## Requisitos
 
@@ -68,9 +68,27 @@ pnpm typecheck
 pnpm lint
 pnpm format:check
 pnpm build
+pnpm test
+pnpm test:integration
 ```
 
-Os quatro rodam no CI a cada pull request ([`.github/workflows/ci.yml`](../.github/workflows/ci.yml)). Os três primeiros também rodam sozinhos após qualquer edição de `.ts`, pelo hook `PostToolUse` — que **bloqueia** a edição quando typecheck ou lint falham.
+Os seis rodam no CI a cada pull request ([`.github/workflows/ci.yml`](../.github/workflows/ci.yml)), com containers `postgres:18` e `mongo:8` para a integração. Typecheck, lint e format também rodam sozinhos após qualquer edição de `.ts`, pelo hook `PostToolUse` — que **bloqueia** a edição quando typecheck ou lint falham. Os testes não entram no hook.
+
+## Testes
+
+Vitest, configurado em [`vitest.config.mts`](../vitest.config.mts) com dois projetos.
+
+| Comando                 | Roda                           | Precisa de banco                                      |
+| ----------------------- | ------------------------------ | ----------------------------------------------------- |
+| `pnpm test`             | `src/**/*.test.ts`             | Não. `DATABASE_URL` e `MONGODB_URI_DEV` ficam vazias. |
+| `pnpm test:watch`       | o mesmo, em modo observação    | Não.                                                  |
+| `pnpm test:integration` | `src/**/*.integration.test.ts` | Sim: `DATABASE_URL_TEST` e `MONGODB_URI_TEST`.        |
+
+**Integração local.** Preencha no `.env` as duas URLs apontando para bancos cujo nome termine em `_test` (`project_schema_test`). Antes da suíte, o `prisma db push` aplica o schema no Postgres de teste e cria o banco se ele não existir; cada teste apaga os registros que usa; no fim, o banco Mongo de teste é removido. A execução para antes de tocar em qualquer banco quando a URL falta, é igual à de desenvolvimento ou não termina em `_test` ([`tests/ambienteDeTeste.mts`](../tests/ambienteDeTeste.mts)).
+
+**Prisma e o Claude Code.** O Prisma detecta quando é chamado por um agente de IA e recusa comando destrutivo (`--force-reset`, `migrate reset`) sem consentimento explícito do usuário. Por isso o global setup usa `db push` sem reset, e a limpeza é feita pelos próprios testes.
+
+**Segredos.** Os testes não leem o `JWT_SECRET` do `.env`: o `vitest.config.mts` injeta segredos próprios de teste.
 
 ## Logs
 

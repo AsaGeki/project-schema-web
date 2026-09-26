@@ -22,11 +22,13 @@ Node 22+, TypeScript, Express 5, tsyringe, Zod, Winston. Persistência dupla: Po
 pnpm dev           # tsx watch, servidor de desenvolvimento
 pnpm build         # tsup, build de produção (cjs)
 pnpm start         # roda o build (dist/server.js)
-pnpm typecheck     # tsc --noEmit
+pnpm typecheck     # tsc --noEmit (src e tests/)
 pnpm lint          # eslint .
 pnpm lint:fix      # eslint . --fix
 pnpm format        # prettier --write .
 pnpm format:check  # prettier --check .
+pnpm test          # vitest: unitários e HTTP, sem banco
+pnpm test:integration  # vitest: integração com Postgres e Mongo de teste
 pnpm db:generate   # prisma generate
 pnpm db:migrate    # prisma migrate dev
 pnpm db:studio     # prisma studio
@@ -74,7 +76,12 @@ Antes de rodar `pnpm add` ou `pnpm add -D`, **pergunte primeiro** — mesmo para
 
 ## Testes
 
-O projeto não tem framework de teste configurado, e isso é deliberado. Não configure um nem exija cobertura por padrão. Se o usuário pedir teste para algo específico, a decisão é revisitada naquele momento.
+Vitest, em dois projetos configurados em [`vitest.config.mts`](vitest.config.mts):
+
+- **`pnpm test`** — `src/**/*.test.ts`, sem banco: services com repositório mockado (`vi.fn`), utils e o `AppServer` real numa porta livre, chamado com `fetch`. Os bancos ficam vazios de propósito nesse projeto.
+- **`pnpm test:integration`** — `src/**/*.integration.test.ts`, contra `DATABASE_URL_TEST` e `MONGODB_URI_TEST`. A execução recusa URL ausente, igual à de desenvolvimento ou de banco cujo nome não termine em `_test`. Cada teste limpa as tabelas e coleções que usa.
+
+O teste mora ao lado do arquivo que testa, com o mesmo nome (`CreateService.ts` → `CreateService.test.ts`). Arquivos de apoio ficam em `tests/`. Código novo com regra de negócio ganha teste do service; o que depende de banco real (projeção, índice, concorrência) ganha teste de integração.
 
 ## Checklist pós-edição
 

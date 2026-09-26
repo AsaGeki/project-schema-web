@@ -72,9 +72,11 @@ modules/<nome>/
 pnpm dev           # servidor de desenvolvimento
 pnpm build         # build de produção
 pnpm start         # roda o build
-pnpm typecheck     # tsc --noEmit
+pnpm typecheck     # tsc --noEmit (src e tests/)
 pnpm lint          # eslint .
 pnpm format        # prettier --write .
+pnpm test          # vitest: unitários e HTTP, sem banco
+pnpm test:integration  # vitest: integração com Postgres e Mongo de teste
 pnpm db:migrate    # prisma migrate dev
 pnpm db:studio     # prisma studio
 ```
