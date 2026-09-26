@@ -9,7 +9,7 @@ const prisma = new PrismaClient();
  * no start de um ambiente efêmero sem checagem prévia.
  */
 async function seedAdmin(): Promise<void> {
-  const email = process.env.SEED_ADMIN_EMAIL ?? 'admin@local';
+  const email = process.env.SEED_ADMIN_EMAIL ?? 'admin@exemplo.com';
   const password = process.env.SEED_ADMIN_PASSWORD ?? 'admin@123';
 
   const user = await prisma.user.upsert({

@@ -11,6 +11,7 @@ import {
   UnsupportedMediaTypeError,
 } from '@shared/errors/UniversalError';
 import { logger } from '@shared/services/LoggerService';
+import { getClientIp } from '@shared/utils/http/getClientIp';
 
 import type { NextFunction, Request, Response } from 'express';
 
@@ -38,7 +39,7 @@ function mapBodyParserError(error: Error): UniversalError | null {
 }
 
 export default function errorMiddleware(error: Error, req: Request, res: Response, _next: NextFunction): Response {
-  const ipRequest = req.ip || 'desconhecido';
+  const ipRequest = getClientIp(req);
 
   const mapped = resolveError(error);
 
