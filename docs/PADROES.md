@@ -40,6 +40,7 @@ src/
         IBaseRepository.ts     contrato agnóstico de banco
         prisma/BasePrismaRepository.ts
         mongo/BaseMongoRepository.ts
+        mongo/models/Counter.ts  sequência atômica (proximaSequencia)
       https/
         app.ts                 classe AppServer
         sendResponse.ts
@@ -49,7 +50,7 @@ src/
     services/                  LoggerService, HashService
     types/                     response.ts  pagination.ts  filter.ts  audit.ts  global.d.ts
     utils/                     subpasta por domínio, um util por arquivo
-      auth/  files/  pagination/  search/  time/  url/
+      auth/  files/  http/  pagination/  search/  time/  url/
   modules/
     <modulo>/
       dtos/
