@@ -21,6 +21,8 @@ export default defineConfig({
         extends: true,
         test: {
           name: 'unit',
+          // O teste HTTP reimporta a aplicação inteira a frio; com os arquivos em paralelo, isso passa dos 5s padrão.
+          testTimeout: 15_000,
           include: ['tests/**/*.test.ts'],
           exclude: ['tests/**/*.integration.test.ts'],
           // Bancos vazios: teste unitário nunca alcança um banco, nem com as URLs no ambiente do CI.
