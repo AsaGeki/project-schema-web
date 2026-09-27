@@ -69,16 +69,17 @@ export default class SendService {
       ...(await this.anexar(template.imagensInline, true)),
     ];
 
-    // `{{ }}` do Handlebars escapa HTML: dado do domínio não vira marcação no e-mail.
-    const subject = Handlebars.compile(template.assunto)(resolvido.dados);
+    // Só o HTML escapa o dado do domínio; assunto e texto puro não são HTML e mostrariam `&#x27;`.
+    const subject = Handlebars.compile(template.assunto, { noEscape: true })(resolvido.dados);
     const html = Handlebars.compile(template.htmlRenderizado)(resolvido.dados);
+    const text = removerTagsHtml(Handlebars.compile(template.htmlRenderizado, { noEscape: true })(resolvido.dados));
 
     await this.mailer.enviar({
       to,
       cc: template.destinatariosFixos.filter(email => !to.includes(email)),
       subject,
       html,
-      text: removerTagsHtml(html),
+      text,
       attachments,
     });
 

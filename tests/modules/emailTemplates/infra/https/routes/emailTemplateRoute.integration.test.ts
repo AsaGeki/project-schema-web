@@ -110,7 +110,7 @@ describe('rotas de templates de e-mail (Mongo, Postgres e disco reais)', () => {
     expect(enviados[0]).toMatchObject({
       to: ['arthur@exemplo.com'],
       cc: ['equipe@exemplo.com'],
-      subject: 'Bem-vindo, Arthur &lt;b&gt;',
+      subject: 'Bem-vindo, Arthur <b>',
       html: '<p>Olá, Arthur &lt;b&gt;</p>',
       attachments: [{ filename: 'contrato.pdf' }],
     });

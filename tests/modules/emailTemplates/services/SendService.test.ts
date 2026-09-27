@@ -115,6 +115,17 @@ describe('SendService', () => {
     expect(mensagem.html).not.toContain('<script>');
   });
 
+  it('assunto e texto saem sem escape de HTML; só o HTML escapa', async () => {
+    const { service, mailer } = montar({ dados: { usuario: { nome: "D'Ávila & Filhos" } } });
+
+    await service.execute('usuario_criado', { ids: ['u-9'] }, 'u-1');
+
+    const [[mensagem]] = mailer.enviar.mock.calls as unknown as [[{ subject: string; text: string; html: string }]];
+    expect(mensagem.subject).toBe("Bem-vindo, D'Ávila & Filhos");
+    expect(mensagem.text).toBe("Olá, D'Ávila & Filhos");
+    expect(mensagem.html).toContain('D&#x27;Ávila &amp; Filhos');
+  });
+
   it('flag inexistente, template não publicado ou desligado, 404 sem resolver nem enviar', async () => {
     for (const [flag, template] of [
       ['nao_existe', templateBase],
