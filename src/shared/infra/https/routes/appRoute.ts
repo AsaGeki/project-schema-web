@@ -39,8 +39,8 @@ appRoute.get('/health', async (_req: Request, res: Response): Promise<Response> 
   });
 });
 
-/** Eco assinado: existe para integrações validarem a assinatura ponta a ponta. */
-appRoute.post('/integration/echo', verifyApiKey, (req: Request, res: Response): Response => {
+/** Eco assinado, sob `/internal/` como toda rota HMAC: integrações validam a assinatura ponta a ponta. */
+appRoute.post('/internal/echo', verifyApiKey, (req: Request, res: Response): Response => {
   return sendResponse(res, { success: true, status: 200, data: { apiKeyId: req.apiKeyId, body: req.body as unknown } });
 });
 

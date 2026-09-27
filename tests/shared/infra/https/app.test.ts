@@ -5,6 +5,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import { env } from '@configs/envConfig';
 import sessionConfig from '@configs/sessionConfig';
 import type IResolvedorDePermissoes from '@shared/infra/auth/IResolvedorDePermissoes';
+import { CSRF_HEADER } from '@shared/infra/https/middlewares/csrfMiddleware';
 import { cifrarValorCookie } from '@shared/utils/auth/cookieCrypto';
 
 import { type IServidorDeTeste, subirApp } from '../../../subirApp';
@@ -46,13 +47,52 @@ describe('AppServer', () => {
 
     const resposta = await fetch(`${servidor.url}/api/users`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'application/json', [CSRF_HEADER]: env.auth.CSRF_HEADER_VALUE },
       body: JSON.stringify({}),
     });
     const corpo = (await resposta.json()) as Record<string, unknown>;
 
     expect(resposta.status).toBe(422);
     expect(corpo).toMatchObject({ success: false, code: 'VALIDATION_FAILED' });
+  });
+
+  it('POST com cookie e sem o header do front vira 403 de CSRF', async () => {
+    servidor = await subirApp();
+
+    const resposta = await fetch(`${servidor.url}/api/users`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Cookie: 'access_token=qualquer' },
+      body: JSON.stringify({}),
+    });
+
+    expect(resposta.status).toBe(403);
+    expect(await resposta.json()).toMatchObject({ code: 'CSRF_HEADER_AUSENTE' });
+  });
+
+  describe('CORS', () => {
+    it('com lista explícita, libera credencial e o header do CSRF', async () => {
+      servidor = await subirApp({ CORS: 'https://front.exemplo.com' });
+
+      const resposta = await fetch(`${servidor.url}/api/users`, {
+        method: 'OPTIONS',
+        headers: {
+          Origin: 'https://front.exemplo.com',
+          'Access-Control-Request-Method': 'POST',
+          'Access-Control-Request-Headers': 'content-type,x-requested-by',
+        },
+      });
+
+      expect(resposta.headers.get('access-control-allow-credentials')).toBe('true');
+      expect(resposta.headers.get('access-control-allow-headers')?.toLowerCase()).toContain('x-requested-by');
+    });
+
+    it('com *, não libera credencial', async () => {
+      servidor = await subirApp({ CORS: '*' });
+
+      const resposta = await fetch(`${servidor.url}/api/`, { headers: { Origin: 'https://qualquer.com' } });
+
+      expect(resposta.headers.get('access-control-allow-credentials')).toBeNull();
+    });
   });
 
   it('marca Vary: Accept-Encoding, pela compressão', async () => {

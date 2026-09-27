@@ -13,6 +13,7 @@ import '@shared/container';
 import { corsConfig } from '@configs/corsConfig';
 import { env } from '@configs/envConfig';
 import { enforceJsonContentType } from '@shared/infra/https/middlewares/contentTypeMiddleware';
+import { csrfMiddleware } from '@shared/infra/https/middlewares/csrfMiddleware';
 import errorMiddleware from '@shared/infra/https/middlewares/errorMiddleware';
 import { logRouterMiddleware } from '@shared/infra/https/middlewares/logRouterMiddleware';
 import { createRateLimiter } from '@shared/infra/https/rateLimiter';
@@ -80,6 +81,7 @@ export class AppServer {
     // Só lê: os cookies de token são cifrados por `cookieCrypto`, não assinados.
     this.server.use(cookieParser());
     this.server.use(cors(corsConfig));
+    this.server.use(csrfMiddleware);
   }
 
   private setupRoutes(): void {

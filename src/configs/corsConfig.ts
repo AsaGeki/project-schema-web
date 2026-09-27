@@ -1,5 +1,6 @@
-import { env, isProduction } from '@configs/envConfig';
+import { env } from '@configs/envConfig';
 import { ForbiddenError } from '@shared/errors/UniversalError';
+import { CSRF_HEADER } from '@shared/infra/https/middlewares/csrfMiddleware';
 
 import type { CorsOptions } from 'cors';
 
@@ -25,9 +26,8 @@ export const corsConfig: CorsOptions = {
     // formato padrão da API se o erro for um UniversalError.
     return callback(new ForbiddenError({ message: `Origin '${origin}' não permitida pelo CORS.` }));
   },
-  // Cookie entre origens só em produção; em desenvolvimento o front costuma
-  // passar por proxy na mesma origem.
-  credentials: isProduction,
+  // Cookie entre origens só com lista explícita: com `*`, qualquer site faria requisição com a sessão do usuário.
+  credentials: !allowedOrigins().includes('*'),
   methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization'],
+  allowedHeaders: ['Content-Type', 'Authorization', CSRF_HEADER],
 };
