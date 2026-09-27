@@ -4,9 +4,9 @@
 | ------------------- | ------------------------------------------------------------------- |
 | Prompt summary      | Registrar o porquê de cada decisão arquitetural, não só o que ela é |
 | Creation date       | 2026-09-01                                                          |
-| Change count        | 8                                                                   |
+| Change count        | 9                                                                   |
 | Last update date    | 2026-09-27                                                          |
-| Last prompt summary | Registrar a sessão por cookie e o CSRF                              |
+| Last prompt summary | Registrar o e-mail por template                                     |
 
 [`PADROES.md`](PADROES.md) diz **o que** é o padrão e [`ARCHITECTURE.md`](ARCHITECTURE.md) diz **como** montar um módulo. Este documento diz **por quê**, e o que cada escolha custa.
 
@@ -231,6 +231,20 @@ As permissões são lidas do banco a cada requisição, e não gravadas no token
 - O front precisa mandar `X-Requested-By` em toda chamada que altera estado.
 - Trocar `TOKEN_COOKIE_ENCRYPTION_KEY` derruba todas as sessões em cookie.
 - A cifra não impede reapresentar o cookie roubado inteiro.
+
+---
+
+## E-mail por template publicado, com resolver por flag
+
+**Decisão.** O e-mail tem um template por flag no Mongo, publicado pela API, e um resolver no código que busca os dados do domínio. O envio sai por `IMailer`, com SMTP ou Microsoft Graph escolhido por `MAIL_PROVIDER`.
+
+**Por quê.** Texto de e-mail muda mais que código, e quem muda não é quem programa: o template publicado dispensa deploy. O resolver deixa o domínio no código, tipado e testado, e o catálogo de tokens diz ao editor o que o template pode usar. O Handlebars escapa HTML por padrão, então dado do usuário não vira marcação. A porta deixa o envio trocável e o service testável sem servidor de e-mail.
+
+**Custo.**
+
+- Template que usa um token que o resolver não entrega sai com o trecho vazio, sem erro.
+- Anexo apagado do módulo `arquivos` quebra o envio até o template ser publicado de novo.
+- Fora de produção sem `SMTP_HOST`, o envio depende de internet para o Ethereal.
 
 ---
 

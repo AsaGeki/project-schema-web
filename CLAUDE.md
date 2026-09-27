@@ -74,6 +74,8 @@ O token vem do `Authorization` ou, na falta dele, do cookie cifrado. Chamada do 
 
 Arquivo vai para `IFileStorage` (token `FileStorage`) e o banco guarda só a key; formato é conferido pelos bytes (`detectarFormato`), nunca pelo `mimetype`. `authorize` vem antes do `upload(...)` na rota. API externa segue a seção "Client de API externa" do `docs/PADROES.md`: um client por API em `infra/clients/`, atrás de interface, com `code` estável por falha.
 
+E-mail sai por `IMailer` (token `Mailer`); e-mail novo é uma flag em `EFlagEmail`, tokens em `catalogoFlags.ts` e um resolver no `SendService`.
+
 ## Git e commits
 
 - **Conventional Commits em português**: `tipo: descrição` (`feat:`, `fix:`, `refactor:`, `docs:`, `chore:`, `perf:`).

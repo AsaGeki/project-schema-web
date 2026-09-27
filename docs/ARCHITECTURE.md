@@ -4,9 +4,9 @@
 | ------------------- | ------------------------------------------------------------------ |
 | Prompt summary      | Documentar a arquitetura do schema base após a reescrita do `src/` |
 | Creation date       | 2026-09-01                                                         |
-| Change count        | 9                                                                  |
+| Change count        | 10                                                                 |
 | Last update date    | 2026-09-27                                                         |
-| Last prompt summary | Documentar a sessão por cookie e o CSRF                            |
+| Last prompt summary | Documentar o e-mail por template                                   |
 
 Contrato e nomenclatura estão em [`PADROES.md`](PADROES.md); o porquê de cada escolha, e o que ela custa, está em [`DECISOES.md`](DECISOES.md). Este documento cobre camadas, direção de dependência e o que precisa existir para um módulo novo funcionar.
 
@@ -167,6 +167,24 @@ flowchart LR
 
 O `LocalDiskStorage` move com `rename`, que exige origem e destino no mesmo disco: por isso o multer recebe dentro de `UPLOADS_DIR`. O nome no disco é UUID, nunca o do usuário.
 
+## E-mail por template
+
+```mermaid
+flowchart LR
+  A[POST /email-templates/:flag/envios] --> B[SendService]
+  B --> C{template ativo?}
+  C -->|não| X[404]
+  C --> D["resolvers[flag]"]
+  D --> E[destinatários: informados, sugeridos ou fixos]
+  E -->|nenhum| Y[422 SEM_DESTINATARIO]
+  E --> F[anexos pelo IArquivosRepository + IFileStorage]
+  F --> G[Handlebars no assunto e no HTML]
+  G --> H["IMailer (SMTP ou Graph)"]
+  H --> I[posEnvio do resolver]
+```
+
+O template é publicado por flag (`PUT`), com `upsert`: a primeira publicação cria ativo. Ligar e desligar é outra rota e outra permissão. Flag nova é um valor em `EFlagEmail`, uma entrada em `catalogoFlags.ts` e um resolver registrado no `SendService`.
+
 ## Checklist de módulo novo
 
 1. `dtos/<Nome>DTO.ts` — schema Zod, `IX` derivado dele, `IXCreate`/`IXUpdate` compondo `IAuditFields`.
@@ -181,6 +199,7 @@ O `LocalDiskStorage` move com `rename`, que exige origem e destino no mesmo disc
 10. `EPermissao<Modulo>.ts` com as permissões do módulo, o grupo registrado em `catalogoPermissoes.ts`, e `authorize` nas rotas. Rodar `pnpm db:seed` para o banco conhecer as permissões novas.
 11. Upload: `authorize` antes de `upload(maximo).array('campo')` na rota, service no fluxo da seção "Arquivos" do `PADROES.md`, e lista de extensões aceitas no módulo.
 12. API externa: `infra/clients/<Nome>Client.ts` atrás de `I<Nome>Client`, config com `configurado`, tabela de erro com `code` estável — seção "Client de API externa" do `PADROES.md`.
+13. E-mail novo: valor em `EFlagEmail`, tokens em `catalogoFlags.ts`, resolver em `resolvers/` injetado no `SendService`. O resolver busca o domínio por interface de outro módulo.
 
 ## Anti-padrões
 

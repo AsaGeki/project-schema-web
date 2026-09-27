@@ -4,9 +4,9 @@
 | ------------------- | ------------------------------------------------------------ |
 | Prompt summary      | Documentar o contrato de sucesso e de erro na fronteira HTTP |
 | Creation date       | 2026-09-01                                                   |
-| Change count        | 5                                                            |
+| Change count        | 6                                                            |
 | Last update date    | 2026-09-27                                                   |
-| Last prompt summary | Registrar o código do CSRF                                   |
+| Last prompt summary | Registrar os códigos de e-mail                               |
 
 Fonte de verdade: [`src/shared/types/response.ts`](../src/shared/types/response.ts), [`src/shared/infra/https/sendResponse.ts`](../src/shared/infra/https/sendResponse.ts), [`src/shared/errors/UniversalError.ts`](../src/shared/errors/UniversalError.ts) e [`src/shared/infra/https/middlewares/errorMiddleware.ts`](../src/shared/infra/https/middlewares/errorMiddleware.ts).
 
@@ -208,5 +208,5 @@ O código do multer vai no campo `code`.
 ## O que não existe hoje
 
 - Não há tradução de erro de `jsonwebtoken` no middleware: o `verifyToken` já converte qualquer falha em `UnauthorizedError`.
-- Nem todo erro de negócio tem `code`: preenchem o campo os de permissões (`PERMISSAO_INEXISTENTE`, `PERFIL_INEXISTENTE`, `CATALOGO_DESATUALIZADO`) e de arquivos (`FORMATO_NAO_ACEITO`, `IMAGEM_INVALIDA`, `ARQUIVO_REPETIDO`), o do CSRF (`CSRF_HEADER_AUSENTE`, 403), além dos que vêm do Zod, dos bancos e do multer.
+- Nem todo erro de negócio tem `code`: preenchem o campo os de permissões (`PERMISSAO_INEXISTENTE`, `PERFIL_INEXISTENTE`, `CATALOGO_DESATUALIZADO`) e de arquivos (`FORMATO_NAO_ACEITO`, `IMAGEM_INVALIDA`, `ARQUIVO_REPETIDO`), o do CSRF (`CSRF_HEADER_AUSENTE`, 403), os de e-mail (`SEM_DESTINATARIO`, `ANEXO_INEXISTENTE`, `ANEXOS_ACIMA_DO_LIMITE`, `IMAGEM_INLINE_INVALIDA`, `EMAIL_NAO_CONFIGURADO`, `EMAIL_INDISPONIVEL`, `EMAIL_ACESSO_NEGADO`), além dos que vêm do Zod, dos bancos e do multer.
 - Não há spec OpenAPI neste repositório.

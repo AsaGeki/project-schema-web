@@ -38,6 +38,7 @@ src/
     infra/
       cache/                   singleFlight — tem estado, por isso não é util
       storage/                 IFileStorage (porta) e LocalDiskStorage
+      mail/                    IMailer (porta), SmtpMailer, GraphMailer
       database/
         IBaseRepository.ts     contrato agnóstico de banco
         prisma/BasePrismaRepository.ts
@@ -53,7 +54,7 @@ src/
     services/                  LoggerService, HashService
     types/                     response.ts  pagination.ts  filter.ts  audit.ts  global.d.ts
     utils/                     subpasta por domínio, um util por arquivo
-      auth/  files/  http/  pagination/  query/  time/  url/
+      auth/  files/  html/  http/  pagination/  query/  time/  url/
   modules/
     <modulo>/
       dtos/

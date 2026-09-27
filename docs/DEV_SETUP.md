@@ -4,9 +4,9 @@
 | ------------------- | -------------------------------------------------- |
 | Prompt summary      | Documentar como levantar o ambiente do schema base |
 | Creation date       | 2026-09-01                                         |
-| Change count        | 8                                                  |
+| Change count        | 9                                                  |
 | Last update date    | 2026-09-27                                         |
-| Last prompt summary | Documentar as variáveis de sessão e CSRF           |
+| Last prompt summary | Documentar as variáveis de e-mail                  |
 
 ## Requisitos
 
@@ -31,33 +31,38 @@ O consumo é agrupado por domínio: `env.server.PORT`, `env.https.CERT`, `env.da
 
 Os nomes seguem o padrão dos backends da empresa (`avb_one_back`, `fbi_back`, `sso_back`), e o [`.env.example`](../.env.example) explica cada variável no próprio arquivo.
 
-| Variável                                                 | Default                          | Observação                                                                                           |
-| -------------------------------------------------------- | -------------------------------- | ---------------------------------------------------------------------------------------------------- |
-| `NODE_ENV`                                               | `development`                    | `development`, `production` ou `test`. Controla nível de log, CORS, rate limit e a URI do Mongo.     |
-| `PORT`                                                   | `3000`                           |                                                                                                      |
-| `SELF_HOST`                                              | `localhost`                      | Host deste backend, sem protocolo nem porta. Hoje só compõe a mensagem de boot.                      |
-| `PUBLIC_URL`                                             | `http://localhost:3000`          | URL pública deste backend. Com `https`, os cookies de token saem com `Secure` e `__Host-`.           |
-| `CORS`                                                   | `*`                              | Lista separada por vírgula, ou `*`. Cookie entre origens só com lista explícita.                     |
-| `JSON_LIMIT`                                             | `2mb`                            | Corpo maior vira 413.                                                                                |
-| `TRUST_PROXY`                                            | `0`                              | Número de proxies reversos na frente da API. `0` ignora o `x-forwarded-for`; atrás de um proxy, `1`. |
-| `ENABLE_ROUTER_MONITORING`                               | `false`                          | Liga o log por requisição.                                                                           |
-| `HTTPS_KEY` / `HTTPS_CERT`                               | vazio                            | Preencher os dois sobe o servidor em TLS. `HTTPS_CA` é opcional.                                     |
-| `DATABASE_URL`                                           | vazio                            | Postgres via Prisma, em qualquer ambiente. Vazio desliga.                                            |
-| `MONGODB_URI`                                            | vazio                            | Mongo em produção.                                                                                   |
-| `MONGODB_URI_DEV`                                        | vazio                            | Mongo fora de produção. Vazia a do ambiente atual, a conexão é ignorada, com log em `debug`.         |
-| `JWT_SECRET`                                             | **sem default**                  | Obrigatória.                                                                                         |
-| `JWT_EXPIRES_IN`                                         | `1d`                             |                                                                                                      |
-| `JWT_REFRESH_SECRET`                                     | **sem default**                  | Obrigatória, e deve ser diferente de `JWT_SECRET`.                                                   |
-| `JWT_REFRESH_EXPIRES_IN`                                 | `12h`                            |                                                                                                      |
-| `TOKEN_COOKIE_ENCRYPTION_KEY`                            | **sem default**                  | Obrigatória, com no mínimo 32 caracteres. Cifra dos cookies de token.                                |
-| `ACCESS_TOKEN_COOKIE_NAME` / `REFRESH_TOKEN_COOKIE_NAME` | `access_token` / `refresh_token` | Ganham `__Host-` em origem `https`.                                                                  |
-| `REFRESH_TOKEN_COOKIE_TTL_MS`                            | `604800000`                      | Validade do cookie do refresh token (7 dias).                                                        |
-| `ALLOWED_RETURN_ORIGINS`                                 | vazio                            | Origens aceitas como URL de retorno. Vazio recusa todas.                                             |
-| `CSRF_HEADER_VALUE`                                      | `project-schema`                 | Valor do `X-Requested-By` que o front manda em POST, PUT, PATCH e DELETE.                            |
-| `API_KEYS_HMAC`                                          | vazio                            | Chaves de integração server-to-server, `id:segredo,id2:segredo2`.                                    |
-| `API_KEYS_HMAC_TOLERANCIA_MS`                            | `300000`                         | Janela do timestamp assinado, em milissegundos.                                                      |
-| `UPLOADS_DIR`                                            | `./uploads`                      | Raiz dos arquivos enviados. Em produção, pasta fora do projeto.                                      |
-| `MAX_FILE_SIZE`                                          | `50MB`                           | Por arquivo: número seguido de `B`, `KB`, `MB` ou `GB`. Acima dele, 413.                             |
+| Variável                                                                       | Default                                   | Observação                                                                                           |
+| ------------------------------------------------------------------------------ | ----------------------------------------- | ---------------------------------------------------------------------------------------------------- |
+| `NODE_ENV`                                                                     | `development`                             | `development`, `production` ou `test`. Controla nível de log, CORS, rate limit e a URI do Mongo.     |
+| `PORT`                                                                         | `3000`                                    |                                                                                                      |
+| `SELF_HOST`                                                                    | `localhost`                               | Host deste backend, sem protocolo nem porta. Hoje só compõe a mensagem de boot.                      |
+| `PUBLIC_URL`                                                                   | `http://localhost:3000`                   | URL pública deste backend. Com `https`, os cookies de token saem com `Secure` e `__Host-`.           |
+| `CORS`                                                                         | `*`                                       | Lista separada por vírgula, ou `*`. Cookie entre origens só com lista explícita.                     |
+| `JSON_LIMIT`                                                                   | `2mb`                                     | Corpo maior vira 413.                                                                                |
+| `TRUST_PROXY`                                                                  | `0`                                       | Número de proxies reversos na frente da API. `0` ignora o `x-forwarded-for`; atrás de um proxy, `1`. |
+| `ENABLE_ROUTER_MONITORING`                                                     | `false`                                   | Liga o log por requisição.                                                                           |
+| `HTTPS_KEY` / `HTTPS_CERT`                                                     | vazio                                     | Preencher os dois sobe o servidor em TLS. `HTTPS_CA` é opcional.                                     |
+| `DATABASE_URL`                                                                 | vazio                                     | Postgres via Prisma, em qualquer ambiente. Vazio desliga.                                            |
+| `MONGODB_URI`                                                                  | vazio                                     | Mongo em produção.                                                                                   |
+| `MONGODB_URI_DEV`                                                              | vazio                                     | Mongo fora de produção. Vazia a do ambiente atual, a conexão é ignorada, com log em `debug`.         |
+| `JWT_SECRET`                                                                   | **sem default**                           | Obrigatória.                                                                                         |
+| `JWT_EXPIRES_IN`                                                               | `1d`                                      |                                                                                                      |
+| `JWT_REFRESH_SECRET`                                                           | **sem default**                           | Obrigatória, e deve ser diferente de `JWT_SECRET`.                                                   |
+| `JWT_REFRESH_EXPIRES_IN`                                                       | `12h`                                     |                                                                                                      |
+| `TOKEN_COOKIE_ENCRYPTION_KEY`                                                  | **sem default**                           | Obrigatória, com no mínimo 32 caracteres. Cifra dos cookies de token.                                |
+| `ACCESS_TOKEN_COOKIE_NAME` / `REFRESH_TOKEN_COOKIE_NAME`                       | `access_token` / `refresh_token`          | Ganham `__Host-` em origem `https`.                                                                  |
+| `REFRESH_TOKEN_COOKIE_TTL_MS`                                                  | `604800000`                               | Validade do cookie do refresh token (7 dias).                                                        |
+| `ALLOWED_RETURN_ORIGINS`                                                       | vazio                                     | Origens aceitas como URL de retorno. Vazio recusa todas.                                             |
+| `CSRF_HEADER_VALUE`                                                            | `project-schema`                          | Valor do `X-Requested-By` que o front manda em POST, PUT, PATCH e DELETE.                            |
+| `API_KEYS_HMAC`                                                                | vazio                                     | Chaves de integração server-to-server, `id:segredo,id2:segredo2`.                                    |
+| `API_KEYS_HMAC_TOLERANCIA_MS`                                                  | `300000`                                  | Janela do timestamp assinado, em milissegundos.                                                      |
+| `UPLOADS_DIR`                                                                  | `./uploads`                               | Raiz dos arquivos enviados. Em produção, pasta fora do projeto.                                      |
+| `MAX_FILE_SIZE`                                                                | `50MB`                                    | Por arquivo: número seguido de `B`, `KB`, `MB` ou `GB`. Acima dele, 413.                             |
+| `MAIL_PROVIDER`                                                                | `smtp`                                    | `smtp` ou `graph`.                                                                                   |
+| `SMTP_HOST` / `SMTP_PORT` / `SMTP_SECURE`                                      | vazio / `587` / `false`                   | Fora de produção, `SMTP_HOST` vazio usa uma conta de teste do Ethereal e loga a URL de preview.      |
+| `SMTP_USER` / `SMTP_PASSWORD`                                                  | vazio                                     | Sem usuário, o transporte vai sem autenticação.                                                      |
+| `SMTP_FROM_NAME` / `SMTP_FROM_EMAIL`                                           | `Project Schema` / `no-reply@exemplo.com` | Remetente do SMTP.                                                                                   |
+| `GRAPH_TENANT_ID` / `GRAPH_CLIENT_ID` / `GRAPH_CLIENT_SECRET` / `GRAPH_SENDER` | vazio                                     | Microsoft Graph por `client_credentials`. Faltando qualquer um, o envio responde 503.                |
 
 Ficam fora do `envConfig`: `MEMORY_LIMIT_MB`, lida pelo `HealthService`; `npm_package_name`/`npm_package_version`, injetadas pelo pnpm e devolvidas no `GET /api/`; e `SEED_ADMIN_EMAIL`/`SEED_ADMIN_PASSWORD`, lidas pelo `prisma/seed.ts`.
 

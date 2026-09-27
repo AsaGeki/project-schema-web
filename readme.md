@@ -30,6 +30,7 @@ src/
       database/            contrato comum + base Prisma + base Mongoose
       cache/               singleFlight
       storage/             IFileStorage e LocalDiskStorage
+      mail/                IMailer, SmtpMailer, GraphMailer
       https/               AppServer, sendResponse, rateLimiter, middlewares, router
     services/              LoggerService, HashService
     types/                 response, pagination, filter, audit
@@ -39,6 +40,7 @@ src/
     logs/                  módulo de referência sobre Mongoose
     permissoes/            perfis, catálogo de permissões e resolução por usuário
     arquivos/              upload, download e remoção de arquivo (Mongo + storage)
+    emailTemplates/        template de e-mail por flag, publicação e envio
   server.ts
 ```
 
@@ -70,6 +72,7 @@ modules/<nome>/
 | Autenticação e autorização  | JWT por Bearer ou cookie cifrado; permissões por perfil em `req.user.abilities`, `authorize` na rota |
 | Proteção CSRF               | Header `X-Requested-By` em método que altera estado; CORS com credencial só para origem explícita    |
 | Upload de arquivo           | Storage por porta, formato pelos bytes, imagem sem EXIF, SHA-256 contra duplicata                    |
+| E-mail por template         | Template por flag no Mongo, Handlebars, resolver por flag, SMTP ou Microsoft Graph                   |
 | Auditoria                   | `createdBy`/`updatedBy` no contrato de escrita dos repositórios                                      |
 
 ## Comandos
