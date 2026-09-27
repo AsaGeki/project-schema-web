@@ -23,13 +23,8 @@ export interface IUser extends z.infer<typeof userSchema> {}
 /** O que o repositório grava: a entrada validada mais a autoria. */
 export interface IUserCreate extends IUser, IAuditFields {}
 
-/**
- * Atualização parcial: todo campo é opcional. `isAdmin` só existe aqui — quem
- * pode alterá-lo é conferido no `UpdateService`.
- */
-export const userPartialSchema = userSchema.partial().extend({
-  isAdmin: z.boolean({ error: 'isAdmin deve ser um boolean válido' }).optional(),
-});
+/** Atualização parcial: todo campo é opcional. */
+export const userPartialSchema = userSchema.partial();
 
 export interface IUserPartial extends z.infer<typeof userPartialSchema> {}
 

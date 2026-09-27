@@ -14,7 +14,6 @@ const publicFields = {
   id: true,
   name: true,
   email: true,
-  isAdmin: true,
   createdAt: true,
   updatedAt: true,
   createdBy: true,
@@ -28,7 +27,6 @@ export default class UsersRepository
   protected readonly delegate = prisma.user;
 
   protected override readonly filterConfig: IFilterConfig = {
-    equals: [{ field: 'isAdmin', as: 'boolean' }],
     search: { text: ['name', 'email'] },
     range: { createdAt: { gte: 'criadoDe', lte: 'criadoAte', as: 'date' } },
   };

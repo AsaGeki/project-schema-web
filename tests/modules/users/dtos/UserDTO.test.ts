@@ -25,11 +25,7 @@ describe('userSchema (cadastro público)', () => {
 });
 
 describe('userPartialSchema (atualização)', () => {
-  it('aceita isAdmin boolean, conferido depois no UpdateService', () => {
-    expect(userPartialSchema.parse({ isAdmin: true })).toEqual({ isAdmin: true });
-  });
-
-  it('recusa isAdmin que não é boolean', () => {
-    expect(userPartialSchema.safeParse({ isAdmin: 'true' }).success).toBe(false);
+  it('descarta isAdmin: perfil é atribuído pela rota própria', () => {
+    expect(userPartialSchema.parse({ name: 'Arthur', isAdmin: true })).toEqual({ name: 'Arthur' });
   });
 });

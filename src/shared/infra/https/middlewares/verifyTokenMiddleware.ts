@@ -1,34 +1,42 @@
 import jwt from 'jsonwebtoken';
+import { container } from 'tsyringe';
 
 import { env } from '@configs/envConfig';
 import { UnauthorizedError } from '@shared/errors/UniversalError';
+import type IResolvedorDePermissoes from '@shared/infra/auth/IResolvedorDePermissoes';
 
 import type { NextFunction, Request, Response } from 'express';
 
 interface ITokenPayload {
   sub: string;
-  isAdmin: boolean;
 }
 
 /**
- * Extrai e valida o access token do header `Authorization`, populando
- * `req.user`. Token ausente, malformado ou expirado vira 401 — o
- * `errorMiddleware` traduz.
+ * Valida o access token do header `Authorization` e resolve as permissões do
+ * usuário pelos perfis dele, populando `req.user`. Token ausente, inválido ou de
+ * usuário que não existe mais vira 401 — o `errorMiddleware` traduz.
  */
-export function verifyToken(req: Request, _res: Response, next: NextFunction): void {
+export async function verifyToken(req: Request, _res: Response, next: NextFunction): Promise<void> {
   const header = req.headers.authorization;
 
   if (!header?.startsWith('Bearer ')) {
     throw new UnauthorizedError({ message: 'Token de autenticação não informado.' });
   }
 
-  const token = header.slice('Bearer '.length).trim();
+  let payload: ITokenPayload;
 
   try {
-    const payload = jwt.verify(token, env.auth.JWT_SECRET) as ITokenPayload;
-    req.user = { id: payload.sub, isAdmin: payload.isAdmin };
-    next();
+    payload = jwt.verify(header.slice('Bearer '.length).trim(), env.auth.JWT_SECRET) as ITokenPayload;
   } catch {
     throw new UnauthorizedError({ message: 'Sessão expirada. Por favor, faça login novamente.' });
   }
+
+  const abilities = await container.resolve<IResolvedorDePermissoes>('ResolvedorDePermissoes').execute(payload.sub);
+
+  if (!abilities) {
+    throw new UnauthorizedError({ message: 'O usuário desta sessão não existe mais.' });
+  }
+
+  req.user = { id: payload.sub, abilities };
+  next();
 }

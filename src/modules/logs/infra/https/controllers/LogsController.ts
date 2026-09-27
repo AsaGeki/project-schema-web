@@ -21,7 +21,7 @@ export default class LogsController {
     res: Response<unknown, { query: IListQuery }>,
   ): Promise<Response> {
     const service = container.resolve(FindAllService);
-    const result = await service.execute(req.user, res.locals.query);
+    const result = await service.execute(res.locals.query);
     return sendResponse(res, result);
   }
 }

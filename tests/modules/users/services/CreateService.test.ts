@@ -11,7 +11,6 @@ const criado = {
   id: 'u-1',
   name: 'Arthur',
   email: 'arthur@exemplo.com',
-  isAdmin: false,
   createdAt: new Date(),
   updatedAt: new Date(),
   createdBy: null,

@@ -24,7 +24,7 @@ export default class UsersController {
 
   public async findAll(this: void, req: Request, res: Response<unknown, { query: IListQuery }>): Promise<Response> {
     const service = container.resolve(FindAllService);
-    const result = await service.execute(req.user, res.locals.query);
+    const result = await service.execute(res.locals.query);
     return sendResponse(res, result);
   }
 
@@ -34,13 +34,13 @@ export default class UsersController {
     res: Response,
   ): Promise<Response> {
     const service = container.resolve(UpdateService);
-    const result = await service.execute(req.params.id, req.body, req.user.id);
+    const result = await service.execute(req.params.id, req.body, req.user);
     return sendResponse(res, result);
   }
 
   public async delete(this: void, req: Request<{ id: string }>, res: Response): Promise<Response> {
     const service = container.resolve(DeleteService);
-    const result = await service.execute(req.params.id, req.user.id);
+    const result = await service.execute(req.params.id, req.user);
     return sendResponse(res, result);
   }
 }

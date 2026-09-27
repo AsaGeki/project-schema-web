@@ -21,7 +21,6 @@ async function seedAdmin(): Promise<void> {
       name: 'Administrador',
       email,
       password: await bcrypt.hash(password, 10),
-      isAdmin: true,
       createdBy: 'seed',
     },
   });

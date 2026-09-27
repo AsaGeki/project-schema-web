@@ -12,7 +12,6 @@ model User {
   name     String   @db.VarChar(120)
   email    String   @unique
   password String
-  isAdmin  Boolean  @default(false)
   perfis   Perfil[]
 
   createdAt DateTime @default(now())

@@ -3,13 +3,11 @@
 declare namespace Express {
   interface Request {
     /**
-     * Usuário autenticado, populado pelo `verifyToken` a partir do access token.
-     * Toda rota protegida pode ler `req.user` sem checagem adicional.
+     * Usuário autenticado, populado pelo `verifyToken` a partir do access token e
+     * das permissões dos perfis. Toda rota protegida pode ler `req.user`.
      */
-    user: {
-      id: string;
-      isAdmin: boolean;
-    };
+    // eslint-disable-next-line @typescript-eslint/consistent-type-imports -- import no topo transformaria este arquivo global em módulo.
+    user: import('@shared/types/auth').IUsuarioAutenticado;
 
     /**
      * Corpo bruto da requisição, capturado no `express.json`. A assinatura HMAC

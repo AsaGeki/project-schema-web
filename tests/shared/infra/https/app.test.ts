@@ -1,5 +1,10 @@
+import jwt from 'jsonwebtoken';
 import mongoose from 'mongoose';
+import { container } from 'tsyringe';
 import { afterEach, describe, expect, it, vi } from 'vitest';
+
+import { env } from '@configs/envConfig';
+import type IResolvedorDePermissoes from '@shared/infra/auth/IResolvedorDePermissoes';
 
 import type { AddressInfo } from 'net';
 
@@ -82,6 +87,31 @@ describe('AppServer', () => {
     const resposta = await fetch(`${servidor.url}/api/`, { headers: { 'Accept-Encoding': 'gzip' } });
 
     expect(resposta.headers.get('vary')).toContain('Accept-Encoding');
+  });
+
+  describe('autorização', () => {
+    function autenticarComo(abilities: string[] | null): string {
+      container.registerInstance<IResolvedorDePermissoes>('ResolvedorDePermissoes', {
+        execute: () => Promise.resolve(abilities),
+      });
+      return `Bearer ${jwt.sign({ sub: 'u-1' }, env.auth.JWT_SECRET)}`;
+    }
+
+    it('rota com permissão exigida responde 403 sem ela', async () => {
+      servidor = await subirApp();
+
+      const resposta = await fetch(`${servidor.url}/api/users`, { headers: { Authorization: autenticarComo([]) } });
+
+      expect(resposta.status).toBe(403);
+    });
+
+    it('token de usuário que não existe mais responde 401', async () => {
+      servidor = await subirApp();
+
+      const resposta = await fetch(`${servidor.url}/api/users`, { headers: { Authorization: autenticarComo(null) } });
+
+      expect(resposta.status).toBe(401);
+    });
   });
 
   describe('TRUST_PROXY em produção', () => {
