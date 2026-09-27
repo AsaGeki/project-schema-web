@@ -112,6 +112,18 @@ describe('AppServer', () => {
 
       expect(resposta.status).toBe(401);
     });
+
+    it('com perfis:read, o catálogo de permissões responde 200 sem ir ao banco', async () => {
+      servidor = await subirApp();
+
+      const resposta = await fetch(`${servidor.url}/api/permissoes`, {
+        headers: { Authorization: autenticarComo(['perfis:read']) },
+      });
+      const corpo = (await resposta.json()) as { data: { slug: string }[] };
+
+      expect(resposta.status).toBe(200);
+      expect(corpo.data.map(grupo => grupo.slug)).toEqual(['users', 'logs', 'perfis']);
+    });
   });
 
   describe('TRUST_PROXY em produção', () => {
