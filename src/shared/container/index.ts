@@ -1,6 +1,7 @@
 import { container } from 'tsyringe';
 
 import '@modules/logs/container';
+import '@modules/permissoes/container';
 import '@modules/users/container';
 import HashService from '@shared/services/HashService';
 
