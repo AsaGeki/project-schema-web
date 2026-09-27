@@ -146,7 +146,7 @@ describe('AppServer', () => {
       const corpo = (await resposta.json()) as { data: { slug: string }[] };
 
       expect(resposta.status).toBe(200);
-      expect(corpo.data.map(grupo => grupo.slug)).toEqual(['users', 'logs', 'perfis', 'arquivos']);
+      expect(corpo.data.map(grupo => grupo.slug)).toEqual(['users', 'logs', 'perfis', 'arquivos', 'emailTemplates']);
     });
   });
 

@@ -2,6 +2,7 @@ import { container } from 'tsyringe';
 
 import { EMailProvider, env } from '@configs/envConfig';
 import '@modules/arquivos/container';
+import '@modules/emailTemplates/container';
 import '@modules/logs/container';
 import '@modules/permissoes/container';
 import '@modules/users/container';
