@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { NotFoundError, ServiceUnavailableError, UniversalError } from './UniversalError';
+import { NotFoundError, ServiceUnavailableError, UniversalError } from '@shared/errors/UniversalError';
 
 describe('ServiceUnavailableError', () => {
   it('responde 503 com título e mensagem padrão, mantendo o code informado', () => {

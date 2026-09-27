@@ -1,8 +1,7 @@
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
 
 import { connectMongo, disconnectMongo } from '@configs/database/mongoClient';
-
-import counterModel, { proximaSequencia } from './Counter';
+import counterModel, { proximaSequencia } from '@shared/infra/database/mongo/models/Counter';
 
 describe('proximaSequencia (Mongo real)', () => {
   beforeAll(async () => {

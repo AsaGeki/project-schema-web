@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { getClientIp } from './getClientIp';
+import { getClientIp } from '@shared/utils/http/getClientIp';
 
 import type { Request } from 'express';
 

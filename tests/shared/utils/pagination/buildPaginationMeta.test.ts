@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { buildPaginationMeta } from './buildPaginationMeta';
+import { buildPaginationMeta } from '@shared/utils/pagination/buildPaginationMeta';
 
 describe('buildPaginationMeta', () => {
   it('calcula total de páginas e indica que há próxima página', () => {

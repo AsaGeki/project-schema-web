@@ -5,7 +5,7 @@ async function carregarComAmbiente(variaveis: Record<string, string>) {
   vi.resetModules();
   for (const [nome, valor] of Object.entries(variaveis)) vi.stubEnv(nome, valor);
 
-  const { apiKeysConfig } = await import('./apiKeysConfig.js');
+  const { apiKeysConfig } = await import('@configs/apiKeysConfig.js');
   return apiKeysConfig;
 }
 

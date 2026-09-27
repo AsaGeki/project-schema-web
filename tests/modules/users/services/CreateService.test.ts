@@ -1,10 +1,9 @@
 import { describe, expect, it, vi } from 'vitest';
 
 import type IUsersRepository from '@modules/users/repositories/IUsersRepository';
+import CreateService from '@modules/users/services/CreateService';
 import { ConflictError } from '@shared/errors/UniversalError';
 import type HashService from '@shared/services/HashService';
-
-import CreateService from './CreateService';
 
 const entrada = { name: 'Arthur', email: 'arthur@exemplo.com', password: '12345678' };
 

@@ -1,8 +1,7 @@
 import { afterAll, beforeEach, describe, expect, it } from 'vitest';
 
 import { prisma } from '@configs/database/prismaClient';
-
-import UsersRepository from './UsersRepository';
+import UsersRepository from '@modules/users/infra/prisma/repositories/UsersRepository';
 
 const repository = new UsersRepository();
 

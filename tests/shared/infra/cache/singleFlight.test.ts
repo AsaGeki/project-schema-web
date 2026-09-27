@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
 
-import { singleFlight } from './singleFlight';
+import { singleFlight } from '@shared/infra/cache/singleFlight';
 
 function adiada<T>(valor: T, ms = 10): Promise<T> {
   return new Promise(resolve => setTimeout(() => resolve(valor), ms));

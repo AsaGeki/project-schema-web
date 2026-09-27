@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
 
-import { sendResponse } from './sendResponse';
+import { sendResponse } from '@shared/infra/https/sendResponse';
 
 import type { Response } from 'express';
 

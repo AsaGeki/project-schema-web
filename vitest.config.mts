@@ -21,8 +21,8 @@ export default defineConfig({
         extends: true,
         test: {
           name: 'unit',
-          include: ['src/**/*.test.ts'],
-          exclude: ['src/**/*.integration.test.ts'],
+          include: ['tests/**/*.test.ts'],
+          exclude: ['tests/**/*.integration.test.ts'],
           // Bancos vazios: teste unitário nunca alcança um banco, nem com as URLs no ambiente do CI.
           env: { ...SEGREDOS_DE_TESTE, NODE_ENV: 'test', DATABASE_URL: '', MONGODB_URI_DEV: '' },
         },
@@ -31,7 +31,7 @@ export default defineConfig({
         extends: true,
         test: {
           name: 'integration',
-          include: ['src/**/*.integration.test.ts'],
+          include: ['tests/**/*.integration.test.ts'],
           globalSetup: ['./tests/globalSetupIntegracao.mts'],
           // Um arquivo por vez: o Mongoose tem uma conexão padrão só por processo.
           fileParallelism: false,

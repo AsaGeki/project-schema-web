@@ -18,7 +18,7 @@ async function subirApp(variaveis: Record<string, string> = {}): Promise<IServid
   mongoose.deleteModel(/.+/);
   for (const [nome, valor] of Object.entries(variaveis)) vi.stubEnv(nome, valor);
 
-  const { AppServer } = await import('./app.js');
+  const { AppServer } = await import('@shared/infra/https/app.js');
   const { httpServer } = new AppServer();
 
   await new Promise<void>(resolve => httpServer.listen(0, resolve));

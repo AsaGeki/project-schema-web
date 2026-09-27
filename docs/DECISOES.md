@@ -4,9 +4,9 @@
 | ------------------- | ------------------------------------------------------------------- |
 | Prompt summary      | Registrar o porquê de cada decisão arquitetural, não só o que ela é |
 | Creation date       | 2026-09-01                                                          |
-| Change count        | 4                                                                   |
+| Change count        | 5                                                                   |
 | Last update date    | 2026-09-27                                                          |
-| Last prompt summary | Remover o cache em memória                                          |
+| Last prompt summary | Mover os testes para `tests/`, espelhando `src/`                    |
 
 [`PADROES.md`](PADROES.md) diz **o que** é o padrão e [`ARCHITECTURE.md`](ARCHITECTURE.md) diz **como** montar um módulo. Este documento diz **por quê**, e o que cada escolha custa.
 
@@ -164,13 +164,15 @@ A segunda metade da regra existe porque o repasse puro dá a ilusão de configur
 
 ---
 
-## Vitest, com o teste ao lado do código e integração em banco próprio
+## Vitest, com `tests/` espelhando `src/` e integração em banco próprio
 
-**Decisão.** Vitest em dois projetos: `pnpm test` roda os `*.test.ts` sem banco, e `pnpm test:integration` roda os `*.integration.test.ts` contra `DATABASE_URL_TEST` e `MONGODB_URI_TEST`. O teste fica ao lado do arquivo testado e é versionado.
+**Decisão.** Vitest em dois projetos: `pnpm test` roda os `*.test.ts` sem banco, e `pnpm test:integration` roda os `*.integration.test.ts` contra `DATABASE_URL_TEST` e `MONGODB_URI_TEST`. O teste fica em `tests/`, no mesmo caminho que o arquivo testado tem dentro de `src/`, e é versionado.
 
 **Por quê.** Até aqui a verificação era manual — `curl` contra o servidor rodando e scripts avulsos —, e o que ela provava sumia no fim da sessão. Dois defeitos reais passaram assim: o cadastro público criava administrador, e toda resposta de usuário devolvia o hash da senha, porque a projeção protegia só o `findByEmail`. Os dois têm hoje um teste que falha se voltarem.
 
 A separação existe porque os dois tipos de teste custam coisas diferentes. O unitário roda em segundos, sem nada no ar, e cabe em toda mudança. O de integração é o único que prova o que depende do banco de verdade — o `omit` do Prisma, a atomicidade do `$inc` no Mongo, a tradução do `filterConfig` —, e por isso exige banco próprio. A trava de nome `_test` existe porque esse projeto apaga dados: uma URL de desenvolvimento no lugar errado não pode virar perda de dado.
+
+A árvore espelhada mantém `src/` só com código de produção, sem um `.test.ts` embaixo de cada arquivo, e o teste de um arquivo continua achável pelo caminho.
 
 Vitest, e não Jest, porque é o que os backends da empresa já usam, na mesma versão, e porque roda TypeScript e os aliases do tsconfig sem transpilação à parte.
 

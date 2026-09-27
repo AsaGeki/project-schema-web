@@ -4,9 +4,9 @@
 | ------------------- | -------------------------------------------------- |
 | Prompt summary      | Documentar como levantar o ambiente do schema base |
 | Creation date       | 2026-09-01                                         |
-| Change count        | 4                                                  |
-| Last update date    | 2026-09-26                                         |
-| Last prompt summary | Documentar a suíte de testes com vitest            |
+| Change count        | 5                                                  |
+| Last update date    | 2026-09-27                                         |
+| Last prompt summary | Mover os testes para `tests/`, espelhando `src/`   |
 
 ## Requisitos
 
@@ -78,11 +78,11 @@ Os seis rodam no CI a cada pull request ([`.github/workflows/ci.yml`](../.github
 
 Vitest, configurado em [`vitest.config.mts`](../vitest.config.mts) com dois projetos.
 
-| Comando                 | Roda                           | Precisa de banco                                      |
-| ----------------------- | ------------------------------ | ----------------------------------------------------- |
-| `pnpm test`             | `src/**/*.test.ts`             | Não. `DATABASE_URL` e `MONGODB_URI_DEV` ficam vazias. |
-| `pnpm test:watch`       | o mesmo, em modo observação    | Não.                                                  |
-| `pnpm test:integration` | `src/**/*.integration.test.ts` | Sim: `DATABASE_URL_TEST` e `MONGODB_URI_TEST`.        |
+| Comando                 | Roda                             | Precisa de banco                                      |
+| ----------------------- | -------------------------------- | ----------------------------------------------------- |
+| `pnpm test`             | `tests/**/*.test.ts`             | Não. `DATABASE_URL` e `MONGODB_URI_DEV` ficam vazias. |
+| `pnpm test:watch`       | o mesmo, em modo observação      | Não.                                                  |
+| `pnpm test:integration` | `tests/**/*.integration.test.ts` | Sim: `DATABASE_URL_TEST` e `MONGODB_URI_TEST`.        |
 
 **Integração local.** Preencha no `.env` as duas URLs apontando para bancos cujo nome termine em `_test` (`project_schema_test`). Antes da suíte, o `prisma db push` aplica o schema no Postgres de teste e cria o banco se ele não existir; cada teste apaga os registros que usa; no fim, o banco Mongo de teste é removido. A execução para antes de tocar em qualquer banco quando a URL falta, é igual à de desenvolvimento ou não termina em `_test` ([`tests/ambienteDeTeste.mts`](../tests/ambienteDeTeste.mts)).
 

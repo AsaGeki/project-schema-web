@@ -2,8 +2,7 @@ import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
 
 import { connectMongo, disconnectMongo } from '@configs/database/mongoClient';
 import { Log } from '@modules/logs/infra/mongo/models/Log';
-
-import LogsRepository from './LogsRepository';
+import LogsRepository from '@modules/logs/infra/mongo/repositories/LogsRepository';
 
 const repository = new LogsRepository();
 

@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { userPartialSchema, userSchema } from './UserDTO';
+import { userPartialSchema, userSchema } from '@modules/users/dtos/UserDTO';
 
 const cadastroValido = { name: 'Arthur', email: 'arthur@exemplo.com', password: '12345678' };
 

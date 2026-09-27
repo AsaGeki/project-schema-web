@@ -78,10 +78,10 @@ Antes de rodar `pnpm add` ou `pnpm add -D`, **pergunte primeiro** — mesmo para
 
 Vitest, em dois projetos configurados em [`vitest.config.mts`](vitest.config.mts):
 
-- **`pnpm test`** — `src/**/*.test.ts`, sem banco: services com repositório mockado (`vi.fn`), utils e o `AppServer` real numa porta livre, chamado com `fetch`. Os bancos ficam vazios de propósito nesse projeto.
-- **`pnpm test:integration`** — `src/**/*.integration.test.ts`, contra `DATABASE_URL_TEST` e `MONGODB_URI_TEST`. A execução recusa URL ausente, igual à de desenvolvimento ou de banco cujo nome não termine em `_test`. Cada teste limpa as tabelas e coleções que usa.
+- **`pnpm test`** — `tests/**/*.test.ts`, sem banco: services com repositório mockado (`vi.fn`), utils e o `AppServer` real numa porta livre, chamado com `fetch`. Os bancos ficam vazios de propósito nesse projeto.
+- **`pnpm test:integration`** — `tests/**/*.integration.test.ts`, contra `DATABASE_URL_TEST` e `MONGODB_URI_TEST`. A execução recusa URL ausente, igual à de desenvolvimento ou de banco cujo nome não termine em `_test`. Cada teste limpa as tabelas e coleções que usa.
 
-O teste mora ao lado do arquivo que testa, com o mesmo nome (`CreateService.ts` → `CreateService.test.ts`). Arquivos de apoio ficam em `tests/`. Código novo com regra de negócio ganha teste do service; o que depende de banco real (projeção, índice, concorrência) ganha teste de integração.
+O teste mora em `tests/`, no mesmo caminho que o arquivo testado tem dentro de `src/` (`src/modules/users/services/CreateService.ts` → `tests/modules/users/services/CreateService.test.ts`), e importa o código pelos aliases (`@modules/...`). Assim `src/` fica só com código de produção. Arquivos de apoio (setup, global setup, trava de ambiente) ficam na raiz de `tests/`. Código novo com regra de negócio ganha teste do service; o que depende de banco real (projeção, índice, concorrência) ganha teste de integração.
 
 ## Checklist pós-edição
 
