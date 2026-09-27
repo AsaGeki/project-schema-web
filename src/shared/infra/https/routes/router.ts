@@ -1,5 +1,6 @@
 import { Router } from 'express';
 
+import arquivoRoute from '@modules/arquivos/infra/https/routes/arquivoRoute';
 import logRoute from '@modules/logs/infra/https/routes/logRoute';
 import perfilRoute from '@modules/permissoes/infra/https/routes/perfilRoute';
 import permissaoRoute from '@modules/permissoes/infra/https/routes/permissaoRoute';
@@ -17,5 +18,6 @@ routes.use('/users', userRoute);
 routes.use('/logs', logRoute);
 routes.use('/perfis', perfilRoute);
 routes.use('/permissoes', permissaoRoute);
+routes.use('/arquivos', arquivoRoute);
 
 export default routes;
