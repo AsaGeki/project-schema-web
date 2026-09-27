@@ -6,6 +6,8 @@ export enum ENodeEnv {
   TEST = 'test',
 }
 
+const BYTES_POR_UNIDADE = { B: 1, KB: 1024, MB: 1024 ** 2, GB: 1024 ** 3 } as const;
+
 /**
  * Fonte única de leitura de variáveis de ambiente. Nenhum outro arquivo acessa
  * `process.env` — quem precisa de configuração lê daqui, ou de um `*Config` que
@@ -42,6 +44,17 @@ const envSchema = z.object({
   API_KEYS_HMAC: z.string().default(''),
   /** Janela de tolerância do timestamp assinado, em milissegundos. */
   API_KEYS_HMAC_TOLERANCIA_MS: z.coerce.number().default(5 * 60 * 1000),
+  /** Raiz dos arquivos enviados. Em produção, pasta fora do projeto, para o deploy não apagar os arquivos. */
+  UPLOADS_DIR: z.string().default('./uploads'),
+  /** Tamanho máximo de cada arquivo enviado (`50MB`, `512KB`, `1GB`); sai daqui em bytes. */
+  MAX_FILE_SIZE: z
+    .string()
+    .regex(/^\d+(\.\d+)?(B|KB|MB|GB)$/, 'MAX_FILE_SIZE deve ser um tamanho como 50MB, 512KB ou 1GB.')
+    .default('50MB')
+    .transform(texto => {
+      const unidade = texto.replace(/^[\d.]+/, '') as keyof typeof BYTES_POR_UNIDADE;
+      return Math.floor(parseFloat(texto) * BYTES_POR_UNIDADE[unidade]);
+    }),
 });
 
 const parsed = envSchema.safeParse(process.env);
@@ -79,6 +92,10 @@ export const env = {
   apiKeys: {
     API_KEYS_HMAC: raw.API_KEYS_HMAC,
     TOLERANCIA_MS: raw.API_KEYS_HMAC_TOLERANCIA_MS,
+  },
+  uploads: {
+    UPLOADS_DIR: raw.UPLOADS_DIR,
+    MAX_FILE_SIZE_BYTES: raw.MAX_FILE_SIZE,
   },
   auth: {
     JWT_SECRET: raw.JWT_SECRET,

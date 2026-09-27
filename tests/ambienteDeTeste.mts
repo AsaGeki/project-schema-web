@@ -1,4 +1,6 @@
 import fs from 'fs';
+import os from 'os';
+import path from 'path';
 import { fileURLToPath } from 'url';
 
 /** Segredos só dos testes: nenhum teste depende do `.env` para o `envConfig` validar. */
@@ -6,6 +8,9 @@ export const SEGREDOS_DE_TESTE = {
   JWT_SECRET: 'segredo-de-teste',
   JWT_REFRESH_SECRET: 'segredo-refresh-de-teste',
 };
+
+/** Raiz de upload dos testes, fora do projeto: cada suíte apaga o que criou. */
+export const UPLOADS_DE_TESTE = path.join(os.tmpdir(), 'project-schema-testes', 'uploads');
 
 /**
  * Lê uma variável do `.env` da raiz sem aplicar no `process.env`; o ambiente do

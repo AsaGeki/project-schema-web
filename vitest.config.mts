@@ -2,7 +2,7 @@ import { fileURLToPath } from 'url';
 
 import { defineConfig } from 'vitest/config';
 
-import { lerVariavel, SEGREDOS_DE_TESTE } from './tests/ambienteDeTeste.mjs';
+import { lerVariavel, SEGREDOS_DE_TESTE, UPLOADS_DE_TESTE } from './tests/ambienteDeTeste.mjs';
 
 // Espelha os `paths` do tsconfig.json.
 const alias = {
@@ -24,7 +24,13 @@ export default defineConfig({
           include: ['tests/**/*.test.ts'],
           exclude: ['tests/**/*.integration.test.ts'],
           // Bancos vazios: teste unitário nunca alcança um banco, nem com as URLs no ambiente do CI.
-          env: { ...SEGREDOS_DE_TESTE, NODE_ENV: 'test', DATABASE_URL: '', MONGODB_URI_DEV: '' },
+          env: {
+            ...SEGREDOS_DE_TESTE,
+            NODE_ENV: 'test',
+            UPLOADS_DIR: UPLOADS_DE_TESTE,
+            DATABASE_URL: '',
+            MONGODB_URI_DEV: '',
+          },
         },
       },
       {
@@ -38,6 +44,7 @@ export default defineConfig({
           env: {
             ...SEGREDOS_DE_TESTE,
             NODE_ENV: 'test',
+            UPLOADS_DIR: UPLOADS_DE_TESTE,
             DATABASE_URL: lerVariavel('DATABASE_URL_TEST') ?? '',
             MONGODB_URI_DEV: lerVariavel('MONGODB_URI_TEST') ?? '',
           },

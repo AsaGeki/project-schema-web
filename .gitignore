@@ -24,6 +24,9 @@ coverage/
 /logs/
 *.log
 
+# Arquivos enviados (UPLOADS_DIR padrão)
+/uploads/
+
 # OS
 .DS_Store
 Thumbs.db
