@@ -6,6 +6,11 @@ export enum ENodeEnv {
   TEST = 'test',
 }
 
+export enum EMailProvider {
+  SMTP = 'smtp',
+  GRAPH = 'graph',
+}
+
 const BYTES_POR_UNIDADE = { B: 1, KB: 1024, MB: 1024 ** 2, GB: 1024 ** 3 } as const;
 
 /**
@@ -70,6 +75,24 @@ const envSchema = z.object({
       const unidade = texto.replace(/^[\d.]+/, '') as keyof typeof BYTES_POR_UNIDADE;
       return Math.floor(parseFloat(texto) * BYTES_POR_UNIDADE[unidade]);
     }),
+  /** Provedor de envio de e-mail. */
+  MAIL_PROVIDER: z.enum(EMailProvider).default(EMailProvider.SMTP),
+  /** Vazio fora de produção: o envio usa uma conta de teste do Ethereal. */
+  SMTP_HOST: z.string().default(''),
+  SMTP_PORT: z.coerce.number().int().positive().default(587),
+  SMTP_SECURE: z
+    .string()
+    .default('false')
+    .transform(value => value === 'true'),
+  SMTP_USER: z.string().default(''),
+  SMTP_PASSWORD: z.string().default(''),
+  SMTP_FROM_NAME: z.string().default('Project Schema'),
+  SMTP_FROM_EMAIL: z.string().default('no-reply@exemplo.com'),
+  GRAPH_TENANT_ID: z.string().default(''),
+  GRAPH_CLIENT_ID: z.string().default(''),
+  GRAPH_CLIENT_SECRET: z.string().default(''),
+  /** Caixa que envia pelo Graph (`POST /users/{GRAPH_SENDER}/sendMail`). */
+  GRAPH_SENDER: z.string().default(''),
 });
 
 const parsed = envSchema.safeParse(process.env);
@@ -112,6 +135,20 @@ export const env = {
   uploads: {
     UPLOADS_DIR: raw.UPLOADS_DIR,
     MAX_FILE_SIZE_BYTES: raw.MAX_FILE_SIZE,
+  },
+  mail: {
+    MAIL_PROVIDER: raw.MAIL_PROVIDER,
+    SMTP_HOST: raw.SMTP_HOST,
+    SMTP_PORT: raw.SMTP_PORT,
+    SMTP_SECURE: raw.SMTP_SECURE,
+    SMTP_USER: raw.SMTP_USER,
+    SMTP_PASSWORD: raw.SMTP_PASSWORD,
+    SMTP_FROM_NAME: raw.SMTP_FROM_NAME,
+    SMTP_FROM_EMAIL: raw.SMTP_FROM_EMAIL,
+    GRAPH_TENANT_ID: raw.GRAPH_TENANT_ID,
+    GRAPH_CLIENT_ID: raw.GRAPH_CLIENT_ID,
+    GRAPH_CLIENT_SECRET: raw.GRAPH_CLIENT_SECRET,
+    GRAPH_SENDER: raw.GRAPH_SENDER,
   },
   auth: {
     JWT_SECRET: raw.JWT_SECRET,
