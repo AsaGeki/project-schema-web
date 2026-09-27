@@ -33,3 +33,14 @@ export interface IUserUpdate extends IUserPartial, IAuditFields {}
 
 /** Representação pública: é o que sai no boundary HTTP, sempre sem a senha. */
 export interface IUserPublic extends Omit<User, 'password'> {}
+
+/** Perfis do usuário: a lista informada substitui a atual inteira. */
+export const userPerfisSchema = z.object({
+  perfis: z
+    .array(z.string({ error: 'Perfil deve ser um id válido' }).trim().min(1, 'Perfil deve ser um id válido'), {
+      error: 'Perfis deve ser uma lista',
+    })
+    .max(50, 'Um usuário tem no máximo 50 perfis'),
+});
+
+export interface IUserPerfis extends z.infer<typeof userPerfisSchema> {}

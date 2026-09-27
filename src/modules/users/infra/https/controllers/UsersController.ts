@@ -1,6 +1,7 @@
 import { container } from 'tsyringe';
 
-import type { IUser, IUserPartial } from '@modules/users/dtos/UserDTO';
+import type { IUser, IUserPartial, IUserPerfis } from '@modules/users/dtos/UserDTO';
+import AtribuirPerfisService from '@modules/users/services/AtribuirPerfisService';
 import CreateService from '@modules/users/services/CreateService';
 import DeleteService from '@modules/users/services/DeleteService';
 import FindAllService from '@modules/users/services/FindAllService';
@@ -41,6 +42,16 @@ export default class UsersController {
   public async delete(this: void, req: Request<{ id: string }>, res: Response): Promise<Response> {
     const service = container.resolve(DeleteService);
     const result = await service.execute(req.params.id, req.user);
+    return sendResponse(res, result);
+  }
+
+  public async atribuirPerfis(
+    this: void,
+    req: Request<{ id: string }, unknown, IUserPerfis>,
+    res: Response,
+  ): Promise<Response> {
+    const service = container.resolve(AtribuirPerfisService);
+    const result = await service.execute(req.params.id, req.body.perfis);
     return sendResponse(res, result);
   }
 }

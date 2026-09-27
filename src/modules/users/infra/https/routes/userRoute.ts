@@ -1,6 +1,7 @@
 import { Router } from 'express';
 
-import { userPartialSchema, userSchema } from '@modules/users/dtos/UserDTO';
+import { EPermissaoPerfis } from '@modules/permissoes/EPermissaoPerfis';
+import { userPartialSchema, userPerfisSchema, userSchema } from '@modules/users/dtos/UserDTO';
 import { EPermissaoUsers } from '@modules/users/EPermissaoUsers';
 import UsersController from '@modules/users/infra/https/controllers/UsersController';
 import { authorize } from '@shared/infra/https/middlewares/authorizeMiddleware';
@@ -21,5 +22,12 @@ userRoute.get('/', authorize(EPermissaoUsers.READ), validateQuery(listQuerySchem
 // Editar e remover: o próprio usuário pode sempre; outro exige permissão, conferida no service.
 userRoute.put('/:id', validateSchema(userPartialSchema), controller.update);
 userRoute.delete('/:id', controller.delete);
+
+userRoute.put(
+  '/:id/perfis',
+  authorize(EPermissaoPerfis.ASSIGN),
+  validateSchema(userPerfisSchema),
+  controller.atribuirPerfis,
+);
 
 export default userRoute;
