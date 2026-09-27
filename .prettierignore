@@ -7,3 +7,4 @@ logs/
 # Auto-gerados — não formatar.
 pnpm-lock.yaml
 prisma/migrations/
+.superpowers/
