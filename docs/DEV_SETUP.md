@@ -4,9 +4,9 @@
 | ------------------- | -------------------------------------------------- |
 | Prompt summary      | Documentar como levantar o ambiente do schema base |
 | Creation date       | 2026-09-01                                         |
-| Change count        | 5                                                  |
+| Change count        | 6                                                  |
 | Last update date    | 2026-09-27                                         |
-| Last prompt summary | Mover os testes para `tests/`, espelhando `src/`   |
+| Last prompt summary | Documentar o seed das permissões                   |
 
 ## Requisitos
 
@@ -56,6 +56,8 @@ Ficam fora do `envConfig`: `MEMORY_LIMIT_MB`, lida pelo `HealthService`; `npm_pa
 ## Bancos
 
 **Postgres.** Preencha `DATABASE_URL` e rode `pnpm db:migrate` para criar o schema a partir de [`prisma/schema.prisma`](../prisma/schema.prisma). `pnpm db:studio` abre o inspetor.
+
+O `pnpm db:seed` sincroniza o catálogo de permissões do código com o banco e cria o perfil `Administrador` para o usuário do seed. Rode de novo sempre que um módulo ganhar ou perder permissão.
 
 **Mongo.** Preencha `MONGODB_URI_DEV` (ou `MONGODB_URI`, em produção). Não há migration: o model do Mongoose cria a coleção e os índices no primeiro uso.
 

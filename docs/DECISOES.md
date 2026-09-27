@@ -4,9 +4,9 @@
 | ------------------- | ------------------------------------------------------------------- |
 | Prompt summary      | Registrar o porquê de cada decisão arquitetural, não só o que ela é |
 | Creation date       | 2026-09-01                                                          |
-| Change count        | 5                                                                   |
+| Change count        | 6                                                                   |
 | Last update date    | 2026-09-27                                                          |
-| Last prompt summary | Mover os testes para `tests/`, espelhando `src/`                    |
+| Last prompt summary | Registrar as permissões por perfil                                  |
 
 [`PADROES.md`](PADROES.md) diz **o que** é o padrão e [`ARCHITECTURE.md`](ARCHITECTURE.md) diz **como** montar um módulo. Este documento diz **por quê**, e o que cada escolha custa.
 
@@ -177,6 +177,22 @@ A árvore espelhada mantém `src/` só com código de produção, sem um `.test.
 Vitest, e não Jest, porque é o que os backends da empresa já usam, na mesma versão, e porque roda TypeScript e os aliases do tsconfig sem transpilação à parte.
 
 **Custo.** Duas variáveis de ambiente a mais e dois bancos de teste locais para quem roda a integração. O teste HTTP reimporta a aplicação a cada cenário, porque o `envConfig` é lido no import, e precisa remover os models do Mongoose antes de cada reimport.
+
+---
+
+## Permissões por perfil, com o catálogo no código
+
+**Decisão.** Permissão `grupo:acao`, agrupada em perfis no Postgres e atribuída a usuários. O catálogo de permissões é declarado no código, um enum por módulo, e o seed o sincroniza com o banco. Perfis são montados pela API. O administrador é um perfil com `todasPermissoes`, não uma coluna no usuário.
+
+**Por quê.** O `isAdmin` resolvia só dois níveis de acesso, e cada regra nova virava um `if` no service. Com permissão por ação, a rota declara o que exige e o perfil diz quem tem. O catálogo no código garante que toda permissão que o banco conhece seja conferida por alguma rota, e vice-versa: não existe permissão cadastrada que nada confere, nem rota que confere permissão que nenhum perfil pode ter. É o mesmo modelo do `sso_back` (grupo, permissão, perfil), sem o CRUD de permissão em runtime.
+
+As permissões são lidas do banco a cada requisição, e não gravadas no token: mudar o perfil de alguém ou remover um usuário vale na requisição seguinte, em todas as instâncias, e não só quando o token expira.
+
+**Custo.**
+
+- Uma consulta ao banco a cada requisição autenticada.
+- A checagem "sobra outro usuário com acesso total" não trava o banco: duas remoções simultâneas dos dois últimos administradores podem passar juntas.
+- Adicionar permissão exige rodar o seed no deploy.
 
 ---
 

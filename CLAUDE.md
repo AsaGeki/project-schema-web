@@ -64,6 +64,10 @@ O contrato comum (`IBaseRepository`) é agnóstico de banco: um módulo CRUD nor
 
 A filtragem da listagem é declarativa: o repositório concreto declara `filterConfig`, e a base traduz para `where` do Prisma ou filtro do Mongo. Nenhum service escreve encadeamento de `if` sobre a query.
 
+## Autorização
+
+Permissão `grupo:acao`, somada dos perfis do usuário e resolvida pelo `verifyToken` em `req.user.abilities`. Rota confere com `authorize(EPermissao<Modulo>.X)`; regra que depende do dado fica no service. Módulo novo declara o enum de permissões e registra o grupo em `modules/permissoes/catalogoPermissoes.ts`. O perfil `Administrador` (`todasPermissoes`) só muda pelo seed.
+
 ## Git e commits
 
 - **Conventional Commits em português**: `tipo: descrição` (`feat:`, `fix:`, `refactor:`, `docs:`, `chore:`, `perf:`).

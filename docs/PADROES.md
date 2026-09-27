@@ -310,6 +310,13 @@ tsyringe. A implementação recebe `@injectable()`, o service recebe `@inject('T
 e depende sempre da interface, nunca da classe concreta. Cada módulo tem seu
 `container/index.ts`, importado pelo container global em `shared/container/index.ts`.
 
+## Autorização
+
+`authorize(EPermissaoUsers.READ)` na rota, depois do `verifyToken`. A permissão vem do enum do
+módulo, nunca de string solta. Regra que depende do dado ("o próprio usuário ou quem tem
+permissão") fica no service, que recebe `req.user` como `IUsuarioAutenticado` e confere com
+`hasRequiredPermissions`.
+
 ## Ferramental
 
 ESLint em flat config, com `recommended-type-checked` e `projectService`, `import-x/order`

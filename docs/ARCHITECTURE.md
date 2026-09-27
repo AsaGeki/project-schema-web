@@ -4,9 +4,9 @@
 | ------------------- | ------------------------------------------------------------------ |
 | Prompt summary      | Documentar a arquitetura do schema base após a reescrita do `src/` |
 | Creation date       | 2026-09-01                                                         |
-| Change count        | 6                                                                  |
+| Change count        | 7                                                                  |
 | Last update date    | 2026-09-27                                                         |
-| Last prompt summary | Mover os testes para `tests/`, espelhando `src/`                   |
+| Last prompt summary | Documentar a autorização por perfil                                |
 
 Contrato e nomenclatura estão em [`PADROES.md`](PADROES.md); o porquê de cada escolha, e o que ela custa, está em [`DECISOES.md`](DECISOES.md). Este documento cobre camadas, direção de dependência e o que precisa existir para um módulo novo funcionar.
 
@@ -96,7 +96,7 @@ O repositório concreto declara o que é filtrável; nenhum service escreve `if 
 
 ```ts
 protected override readonly filterConfig: IFilterConfig = {
-  equals: [{ field: 'isAdmin', as: 'boolean' }],
+  equals: ['email'],
   search: { text: ['name', 'email'] },
   range: { createdAt: { gte: 'criadoDe', lte: 'criadoAte', as: 'date' } },
 };
@@ -125,9 +125,15 @@ Cada módulo tem seu `container/index.ts`, importado pelo container global em `s
 
 ## Autorização
 
-O `verifyToken` popula `req.user` (`id`, `isAdmin`) e é aplicado por `router.use()` no `Route` do módulo, cobrindo tudo que vier depois. Rota pública fica **antes** dessa linha — é o caso de `POST /api/users`.
+Permissão é uma string `grupo:acao` (`users:read`). O usuário tem as permissões somadas dos perfis dele; o perfil `Administrador`, criado pelo seed, tem `todasPermissoes` e vale como `*`.
 
-Regra de papel (`isAdmin`) mora no **service**, não em middleware de rota. `FindAllService` recusa quem não é admin com `ForbiddenError`. O motivo é que a regra costuma depender do recurso e do dono, não só do papel — e no service ela é visível para quem lê o fluxo.
+- O `verifyToken` valida o token, resolve as permissões pelo `sub` (porta `IResolvedorDePermissoes`, implementada no módulo `permissoes`, com uma consulta ao banco por requisição) e popula `req.user` com `id` e `abilities`. Usuário que não existe mais recebe 401. Ele é aplicado por `router.use()` no `Route` do módulo; rota pública fica **antes** dessa linha — é o caso de `POST /api/users`.
+- `authorize('grupo:acao')` fica na rota, depois do `verifyToken` e antes de qualquer middleware que grave algo. Exige todas as permissões informadas; `*` passa em tudo.
+- Permissão que depende do dado fica no service, que recebe `req.user`: "o próprio usuário, ou quem tem `users:update`".
+
+Cada módulo declara as próprias permissões num enum `EPermissao<Modulo>.ts` na raiz do módulo, e o grupo entra em `modules/permissoes/catalogoPermissoes.ts`. O `pnpm db:seed` sincroniza o catálogo com o banco: cria o que falta e remove o que saiu do código, tirando a permissão dos perfis junto.
+
+O último usuário com acesso total não pode ser removido nem perder o perfil — 409.
 
 ## Checklist de módulo novo
 
@@ -140,6 +146,7 @@ Regra de papel (`isAdmin`) mora no **service**, não em middleware de rota. `Fin
 7. `container/index.ts` — registra o token.
 8. Importar o container no `shared/container/index.ts` e a rota no `shared/infra/https/routes/router.ts`.
 9. `tests/modules/<nome>/services/<Acao>Service.test.ts` — teste do service com o repositório mockado; `*.integration.test.ts` no caminho do repositório, dentro de `tests/`, quando o comportamento depende do banco real.
+10. `EPermissao<Modulo>.ts` com as permissões do módulo, o grupo registrado em `catalogoPermissoes.ts`, e `authorize` nas rotas. Rodar `pnpm db:seed` para o banco conhecer as permissões novas.
 
 ## Anti-padrões
 

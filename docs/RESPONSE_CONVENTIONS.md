@@ -4,9 +4,9 @@
 | ------------------- | ------------------------------------------------------------ |
 | Prompt summary      | Documentar o contrato de sucesso e de erro na fronteira HTTP |
 | Creation date       | 2026-09-01                                                   |
-| Change count        | 2                                                            |
-| Last update date    | 2026-09-26                                                   |
-| Last prompt summary | Incluir o erro de dependência indisponível                   |
+| Change count        | 3                                                            |
+| Last update date    | 2026-09-27                                                   |
+| Last prompt summary | Tirar o isAdmin do exemplo de criação                        |
 
 Fonte de verdade: [`src/shared/types/response.ts`](../src/shared/types/response.ts), [`src/shared/infra/https/sendResponse.ts`](../src/shared/infra/https/sendResponse.ts), [`src/shared/errors/UniversalError.ts`](../src/shared/errors/UniversalError.ts) e [`src/shared/infra/https/middlewares/errorMiddleware.ts`](../src/shared/infra/https/middlewares/errorMiddleware.ts).
 
@@ -51,7 +51,7 @@ public async create(req: Request, res: Response): Promise<Response> {
 {
   "success": true,
   "message": "Usuário criado com sucesso!",
-  "data": { "id": "9f1c...", "name": "Arthur", "email": "arthur@exemplo.com", "isAdmin": false },
+  "data": { "id": "9f1c...", "name": "Arthur", "email": "arthur@exemplo.com" },
 }
 ```
 
