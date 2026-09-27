@@ -5,6 +5,9 @@ import { CATALOGO_PERMISSOES, grupoDoCatalogo, PERMISSOES_DO_CATALOGO } from '@m
 describe('catálogo de permissões', () => {
   it('reúne as permissões de todos os módulos no formato grupo:acao', () => {
     expect([...PERMISSOES_DO_CATALOGO].sort()).toEqual([
+      'arquivos:create',
+      'arquivos:delete',
+      'arquivos:read',
       'logs:read',
       'perfis:assign',
       'perfis:create',

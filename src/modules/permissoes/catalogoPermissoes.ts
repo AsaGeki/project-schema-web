@@ -1,3 +1,4 @@
+import { EPermissaoArquivos } from '@modules/arquivos/EPermissaoArquivos';
 import { EPermissaoLogs } from '@modules/logs/EPermissaoLogs';
 import { EPermissaoPerfis } from '@modules/permissoes/EPermissaoPerfis';
 import { EPermissaoUsers } from '@modules/users/EPermissaoUsers';
@@ -30,6 +31,7 @@ export const CATALOGO_PERMISSOES: readonly IGrupoDoCatalogo[] = [
   grupoDoCatalogo('users', 'Usuários', EPermissaoUsers),
   grupoDoCatalogo('logs', 'Logs', EPermissaoLogs),
   grupoDoCatalogo('perfis', 'Perfis de acesso', EPermissaoPerfis),
+  grupoDoCatalogo('arquivos', 'Arquivos', EPermissaoArquivos),
 ];
 
 /** As permissões do catálogo no formato `grupo:acao`. */

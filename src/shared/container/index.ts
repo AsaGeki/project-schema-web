@@ -1,5 +1,6 @@
 import { container } from 'tsyringe';
 
+import '@modules/arquivos/container';
 import '@modules/logs/container';
 import '@modules/permissoes/container';
 import '@modules/users/container';
