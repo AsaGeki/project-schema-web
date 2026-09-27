@@ -136,6 +136,18 @@ describe('rotas de arquivos (Mongo e disco reais)', () => {
     expect(await mongoose.connection.collection('arquivos').countDocuments()).toBe(0);
   });
 
+  it('PNG com assinatura válida e conteúdo corrompido, 422 sem sobrar nada', async () => {
+    servidor = await subirApp();
+    const corrompido = Buffer.concat([(await png()).subarray(0, 16), Buffer.alloc(64, 7)]);
+
+    const resposta = await enviar(servidor, autenticarComo(TODAS), [{ conteudo: corrompido, nome: 'quebrada.png' }]);
+
+    expect(resposta.status).toBe(422);
+    expect(await resposta.json()).toMatchObject({ code: 'IMAGEM_INVALIDA' });
+    expect(await pendentes()).toEqual([]);
+    expect(await mongoose.connection.collection('arquivos').countDocuments()).toBe(0);
+  });
+
   it('o mesmo arquivo de novo, 409, com um arquivo só no disco', async () => {
     servidor = await subirApp();
     const token = autenticarComo(TODAS);

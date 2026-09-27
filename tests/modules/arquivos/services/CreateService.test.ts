@@ -108,6 +108,19 @@ describe('CreateService (arquivos)', () => {
     expect(resposta).toMatchObject({ success: true, status: 201 });
   });
 
+  it('imagem que o sharp não consegue ler, 422 sem gravar', async () => {
+    const { service, storage } = montar();
+    vi.mocked(detectarFormato).mockResolvedValue(PNG);
+    vi.mocked(otimizarImagem).mockRejectedValueOnce(new Error('Input buffer contains unsupported image format'));
+
+    await expect(service.execute([recebido('quebrada.png')], 'u-1')).rejects.toMatchObject({
+      status: 422,
+      code: 'IMAGEM_INVALIDA',
+    });
+    expect(storage.save).not.toHaveBeenCalled();
+    expect(descartarTemporarios).toHaveBeenCalledWith(['/recebendo/quebrada.png']);
+  });
+
   it('o mesmo conteúdo duas vezes no envio, 409, e o que já foi gravado sai', async () => {
     const { service, storage, repository } = montar();
     vi.mocked(detectarFormato).mockResolvedValue(PDF);

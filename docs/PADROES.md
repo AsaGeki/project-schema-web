@@ -326,7 +326,8 @@ O arquivo mora atrás de `IFileStorage` (token `FileStorage`); o banco grava só
 segue a ordem:
 
 1. `detectarFormato` pelos bytes, contra a lista de extensões aceitas do módulo;
-2. `otimizarImagem` quando é imagem (EXIF e GPS saem, lado maior até 2560px);
+2. `otimizarImagem` quando é imagem (EXIF e GPS saem, lado maior até 2560px); imagem que o `sharp`
+   não lê vira 422 `IMAGEM_INVALIDA`;
 3. `lerAssinatura` para o SHA-256, que barra duplicata no envio e no banco;
 4. `storage.save`, guardando a key;
 5. em erro, sai o que já foi gravado (registros e arquivos); no `finally`, `descartarTemporarios`.

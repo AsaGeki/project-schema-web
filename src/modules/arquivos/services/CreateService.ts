@@ -3,7 +3,12 @@ import { inject, injectable } from 'tsyringe';
 import type { IArquivoDocument, IArquivoDTO } from '@modules/arquivos/dtos/ArquivoDTO';
 import { EXTENSOES_ACEITAS, EXTENSOES_IMAGEM } from '@modules/arquivos/formatosAceitos';
 import type IArquivosRepository from '@modules/arquivos/repositories/IArquivosRepository';
-import { BadRequestError, ConflictError, UnsupportedMediaTypeError } from '@shared/errors/UniversalError';
+import {
+  BadRequestError,
+  ConflictError,
+  UnprocessableEntityError,
+  UnsupportedMediaTypeError,
+} from '@shared/errors/UniversalError';
 import type IFileStorage from '@shared/infra/storage/IFileStorage';
 import { logger } from '@shared/services/LoggerService';
 import type { IResponseEx } from '@shared/types/response';
@@ -50,7 +55,13 @@ export default class CreateService {
         let caminho = arquivo.path;
 
         if (EXTENSOES_IMAGEM.includes(formato.ext)) {
-          caminho = await otimizarImagem(arquivo.path, formato.ext);
+          // A assinatura diz imagem, mas o conteúdo pode estar truncado ou corrompido.
+          caminho = await otimizarImagem(arquivo.path, formato.ext).catch(() => {
+            throw new UnprocessableEntityError({
+              message: `Imagem inválida ou corrompida: ${arquivo.originalname}.`,
+              code: 'IMAGEM_INVALIDA',
+            });
+          });
           temporarios.push(caminho);
         }
 

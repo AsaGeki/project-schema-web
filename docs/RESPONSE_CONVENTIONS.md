@@ -208,5 +208,5 @@ O código do multer vai no campo `code`.
 ## O que não existe hoje
 
 - Não há tradução de erro de `jsonwebtoken` no middleware: o `verifyToken` já converte qualquer falha em `UnauthorizedError`.
-- Nem todo erro de negócio tem `code`: preenchem o campo os de permissões (`PERMISSAO_INEXISTENTE`, `PERFIL_INEXISTENTE`, `CATALOGO_DESATUALIZADO`) e de arquivos (`FORMATO_NAO_ACEITO`, `ARQUIVO_REPETIDO`), além dos que vêm do Zod, dos bancos e do multer.
+- Nem todo erro de negócio tem `code`: preenchem o campo os de permissões (`PERMISSAO_INEXISTENTE`, `PERFIL_INEXISTENTE`, `CATALOGO_DESATUALIZADO`) e de arquivos (`FORMATO_NAO_ACEITO`, `IMAGEM_INVALIDA`, `ARQUIVO_REPETIDO`), além dos que vêm do Zod, dos bancos e do multer.
 - Não há spec OpenAPI neste repositório.
