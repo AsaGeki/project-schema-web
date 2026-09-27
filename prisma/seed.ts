@@ -1,7 +1,9 @@
-import { PrismaClient } from '@prisma/client';
 import bcrypt from 'bcrypt';
 
-const prisma = new PrismaClient();
+import { prisma } from '../src/configs/database/prismaClient';
+import { sincronizarCatalogo } from '../src/modules/permissoes/infra/prisma/sincronizarCatalogo';
+
+const PERFIL_ADMINISTRADOR = 'Administrador';
 
 /**
  * Semeadura idempotente: cada registro usa `upsert` sobre a chave natural, para
@@ -24,10 +26,23 @@ async function seedAdmin(): Promise<void> {
     },
   });
 
+  await prisma.perfil.upsert({
+    where: { nome: PERFIL_ADMINISTRADOR },
+    update: { todasPermissoes: true, usuarios: { connect: { id: user.id } } },
+    create: {
+      nome: PERFIL_ADMINISTRADOR,
+      descricao: 'Todas as permissões, atuais e futuras.',
+      todasPermissoes: true,
+      createdBy: 'seed',
+      usuarios: { connect: { id: user.id } },
+    },
+  });
+
   console.log(`Usuário administrador disponível: ${user.email}`);
 }
 
 async function main(): Promise<void> {
+  await sincronizarCatalogo();
   await seedAdmin();
 }
 
