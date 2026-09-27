@@ -114,7 +114,7 @@ A allowlist vem de `CORS`, em lista separada por vírgula, e `*` libera qualquer
 
 Origem fora da lista recebe **403** no formato de erro padrão da API, e não um 500 genérico: [`src/configs/corsConfig.ts`](../src/configs/corsConfig.ts) rejeita com `ForbiddenError`, não com `Error` cru.
 
-`credentials` só é habilitado com lista explícita: com `*`, o cookie não atravessa origem. A lista libera o header `X-Requested-By`, que o `csrfMiddleware` exige em POST, PUT, PATCH e DELETE sem `Authorization`.
+`credentials` só é habilitado com lista explícita: com `*`, o cookie não atravessa origem. A lista libera o header `X-Requested-By`, que o `csrfMiddleware` exige em POST, PUT, PATCH e DELETE sem `Authorization: Bearer`.
 
 ## MCP
 

@@ -222,7 +222,7 @@ As permissões são lidas do banco a cada requisição, e não gravadas no token
 
 ## Sessão por cookie cifrado, CSRF por header
 
-**Decisão.** O token pode viajar num cookie `httpOnly`, `SameSite=Lax`, cifrado com AES-256-GCM. Método que altera estado exige o header `X-Requested-By` com valor fixo, salvo rota HMAC e requisição com `Authorization`. O schema traz as primitivas e a leitura; gravar a sessão é do projeto que tiver login.
+**Decisão.** O token pode viajar num cookie `httpOnly`, `SameSite=Lax`, cifrado com AES-256-GCM. Método que altera estado exige o header `X-Requested-By` com valor fixo, salvo rota HMAC e requisição com `Authorization: Bearer`. O schema traz as primitivas e a leitura; gravar a sessão é do projeto que tiver login.
 
 **Por quê.** Token em `localStorage` é legível por qualquer script da página; `httpOnly` tira o token do alcance do JavaScript. A cifra impede ler o JWT de dentro do cookie copiado do disco. `Lax` mantém a navegação vinda de link de e-mail; o CSRF que o `Lax` deixa passar é barrado pelo header, que um form de outro site não consegue mandar sem o preflight do CORS.
 

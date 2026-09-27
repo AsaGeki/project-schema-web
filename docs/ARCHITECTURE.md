@@ -140,7 +140,7 @@ O último usuário com acesso total não pode ser removido nem perder o perfil �
 O schema traz as primitivas, não o login: `setAuthCookies` e `clearAuthCookies` (em `shared/utils/auth/cookies.ts`) ficam para o projeto que tiver login gravar a sessão.
 
 - **Cookie de token:** valor cifrado com AES-256-GCM (`cookieCrypto`), `httpOnly`, `SameSite=Lax`, `path=/`. `Secure` e o prefixo `__Host-` saem de `PUBLIC_URL` em HTTPS (`configs/sessionConfig.ts`), não do `NODE_ENV`.
-- **CSRF:** o `csrfMiddleware` exige `X-Requested-By: <CSRF_HEADER_VALUE>` em POST, PUT, PATCH e DELETE. Passam sem ele: rotas sob `/api/internal/` (HMAC) e requisições com `Authorization`, que o navegador não anexa sozinho.
+- **CSRF:** o `csrfMiddleware` exige `X-Requested-By: <CSRF_HEADER_VALUE>` em POST, PUT, PATCH e DELETE. Passam sem ele: rotas sob `/api/internal/` (HMAC) e requisições com `Authorization: Bearer`, que o navegador não anexa sozinho (`Basic` ele reenvia, e não dispensa).
 - **CORS:** `credentials` só com lista explícita em `CORS`; com `*`, o cookie não atravessa origem.
 - **URL de retorno:** `origemConfiavel` aceita só http/https com origem em `ALLOWED_RETURN_ORIGINS`.
 

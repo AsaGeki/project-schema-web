@@ -33,4 +33,8 @@ describe('csrfMiddleware', () => {
   it('requisição com Authorization segue sem o header: o Bearer não vai sozinho de outro site', () => {
     expect(passou('POST', '/api/perfis', { authorization: 'Bearer x' })).toBe(true);
   });
+
+  it('Authorization que não é Bearer não dispensa o header: Basic o navegador reenvia sozinho', () => {
+    expect(() => passou('POST', '/api/perfis', { authorization: 'Basic dXNlcjpzZW5oYQ==' })).toThrow(ForbiddenError);
+  });
 });

@@ -19,8 +19,8 @@ const PREFIXO_INTERNO = '/api/internal/';
 export function csrfMiddleware(req: Request, _res: Response, next: NextFunction): void {
   if (METODOS_SEGUROS.has(req.method)) return next();
   if (req.path.startsWith(PREFIXO_INTERNO)) return next();
-  // O navegador não anexa `Authorization` sozinho: quem o manda já não é um form de outro site.
-  if (req.headers.authorization) return next();
+  // O navegador não anexa Bearer sozinho, então quem o manda não é um form de outro site. Basic ele reenvia.
+  if (req.headers.authorization?.startsWith('Bearer ')) return next();
 
   if (req.headers[CSRF_HEADER] !== env.auth.CSRF_HEADER_VALUE) {
     throw new ForbiddenError({
