@@ -3,16 +3,18 @@ import { container } from 'tsyringe';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { env } from '@configs/envConfig';
+import sessionConfig from '@configs/sessionConfig';
 import { UnauthorizedError } from '@shared/errors/UniversalError';
 import type IResolvedorDePermissoes from '@shared/infra/auth/IResolvedorDePermissoes';
 import { verifyToken } from '@shared/infra/https/middlewares/verifyTokenMiddleware';
+import { cifrarValorCookie } from '@shared/utils/auth/cookieCrypto';
 
 import type { Request, Response } from 'express';
 
 const resolvedor = { execute: vi.fn<IResolvedorDePermissoes['execute']>() };
 
-function requisicao(authorization?: string): Request {
-  return { headers: { authorization } } as unknown as Request;
+function requisicao(authorization?: string, cookies: Record<string, string> = {}): Request {
+  return { headers: { authorization }, cookies } as unknown as Request;
 }
 
 describe('verifyToken', () => {
@@ -31,6 +33,25 @@ describe('verifyToken', () => {
     expect(req.user).toEqual({ id: 'u-1', abilities: ['users:read'] });
     expect(resolvedor.execute).toHaveBeenCalledWith('u-1');
     expect(next).toHaveBeenCalledOnce();
+  });
+
+  it('sem Authorization, usa o token do cookie', async () => {
+    resolvedor.execute.mockResolvedValue(['logs:read']);
+    const token = jwt.sign({ sub: 'u-2' }, env.auth.JWT_SECRET);
+    const req = requisicao(undefined, { [sessionConfig.accessTokenCookieName]: cifrarValorCookie(token) });
+    const next = vi.fn();
+
+    await verifyToken(req, {} as Response, next);
+
+    expect(req.user).toEqual({ id: 'u-2', abilities: ['logs:read'] });
+    expect(next).toHaveBeenCalledOnce();
+  });
+
+  it('cookie que não decifra, 401', async () => {
+    const req = requisicao(undefined, { [sessionConfig.accessTokenCookieName]: 'adulterado' });
+
+    await expect(verifyToken(req, {} as Response, vi.fn())).rejects.toBeInstanceOf(UnauthorizedError);
+    expect(resolvedor.execute).not.toHaveBeenCalled();
   });
 
   it('sem token, 401', async () => {

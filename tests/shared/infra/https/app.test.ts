@@ -3,7 +3,9 @@ import { container } from 'tsyringe';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { env } from '@configs/envConfig';
+import sessionConfig from '@configs/sessionConfig';
 import type IResolvedorDePermissoes from '@shared/infra/auth/IResolvedorDePermissoes';
+import { cifrarValorCookie } from '@shared/utils/auth/cookieCrypto';
 
 import { type IServidorDeTeste, subirApp } from '../../../subirApp';
 
@@ -75,6 +77,16 @@ describe('AppServer', () => {
       const resposta = await fetch(`${servidor.url}/api/users`, { headers: { Authorization: autenticarComo([]) } });
 
       expect(resposta.status).toBe(403);
+    });
+
+    it('autentica pelo cookie de access token quando não há Authorization', async () => {
+      servidor = await subirApp();
+      const bearer = autenticarComo(['perfis:read']);
+      const cookie = `${sessionConfig.accessTokenCookieName}=${cifrarValorCookie(bearer.slice('Bearer '.length))}`;
+
+      const resposta = await fetch(`${servidor.url}/api/permissoes`, { headers: { Cookie: cookie } });
+
+      expect(resposta.status).toBe(200);
     });
 
     it('token de usuário que não existe mais responde 401', async () => {

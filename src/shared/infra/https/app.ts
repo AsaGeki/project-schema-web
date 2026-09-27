@@ -2,6 +2,7 @@ import http from 'http';
 import https from 'https';
 
 import compression from 'compression';
+import cookieParser from 'cookie-parser';
 import cors from 'cors';
 import express from 'express';
 import helmet from 'helmet';
@@ -76,6 +77,8 @@ export class AppServer {
         },
       }),
     );
+    // Só lê: os cookies de token são cifrados por `cookieCrypto`, não assinados.
+    this.server.use(cookieParser());
     this.server.use(cors(corsConfig));
   }
 
