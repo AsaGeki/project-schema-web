@@ -4,9 +4,9 @@
 | ------------------- | ------------------------------------------------------------------- |
 | Prompt summary      | Registrar o porquê de cada decisão arquitetural, não só o que ela é |
 | Creation date       | 2026-09-01                                                          |
-| Change count        | 3                                                                   |
-| Last update date    | 2026-09-26                                                          |
-| Last prompt summary | Registrar a adoção do vitest                                        |
+| Change count        | 4                                                                   |
+| Last update date    | 2026-09-27                                                          |
+| Last prompt summary | Remover o cache em memória                                          |
 
 [`PADROES.md`](PADROES.md) diz **o que** é o padrão e [`ARCHITECTURE.md`](ARCHITECTURE.md) diz **como** montar um módulo. Este documento diz **por quê**, e o que cada escolha custa.
 
@@ -182,4 +182,4 @@ Vitest, e não Jest, porque é o que os backends da empresa já usam, na mesma v
 
 - **Spec OpenAPI.** O projeto não gera nem valida contrato de API.
 - **Autenticação completa.** Há verificação de token, mas não há login, refresh nem revogação — o módulo `users` é referência de padrão, não de produto.
-- **Soft delete e cron.** Existem nos projetos que originaram este padrão. Não foram trazidos porque cada um carrega decisões próprias, que merecem ser tomadas no projeto que precisar deles.
+- **Soft delete, cache e cron.** Existem nos projetos que originaram este padrão. Não foram trazidos porque cada um carrega decisões próprias, que merecem ser tomadas no projeto que precisar deles.

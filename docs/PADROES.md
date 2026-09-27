@@ -35,7 +35,7 @@ src/
       UniversalError.ts
       prismaErrors.ts  mongoErrors.ts
     infra/
-      cache/                   MemoryTtlCache, singleFlight — têm estado, por isso não são utils
+      cache/                   singleFlight — tem estado, por isso não é util
       database/
         IBaseRepository.ts     contrato agnóstico de banco
         prisma/BasePrismaRepository.ts

@@ -28,7 +28,7 @@ src/
     errors/                UniversalError + tradutores de Prisma e Mongo
     infra/
       database/            contrato comum + base Prisma + base Mongoose
-      cache/               MemoryTtlCache, singleFlight
+      cache/               singleFlight
       https/               AppServer, sendResponse, rateLimiter, middlewares, router
     services/              LoggerService, HashService
     types/                 response, pagination, filter, audit
