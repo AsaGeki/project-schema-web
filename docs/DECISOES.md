@@ -4,9 +4,9 @@
 | ------------------- | ------------------------------------------------------------------- |
 | Prompt summary      | Registrar o porquê de cada decisão arquitetural, não só o que ela é |
 | Creation date       | 2026-09-01                                                          |
-| Change count        | 7                                                                   |
+| Change count        | 8                                                                   |
 | Last update date    | 2026-09-27                                                          |
-| Last prompt summary | Registrar o storage de arquivo e o client externo                   |
+| Last prompt summary | Registrar a sessão por cookie e o CSRF                              |
 
 [`PADROES.md`](PADROES.md) diz **o que** é o padrão e [`ARCHITECTURE.md`](ARCHITECTURE.md) diz **como** montar um módulo. Este documento diz **por quê**, e o que cada escolha custa.
 
@@ -220,8 +220,22 @@ As permissões são lidas do banco a cada requisição, e não gravadas no token
 
 ---
 
+## Sessão por cookie cifrado, CSRF por header
+
+**Decisão.** O token pode viajar num cookie `httpOnly`, `SameSite=Lax`, cifrado com AES-256-GCM. Método que altera estado exige o header `X-Requested-By` com valor fixo, salvo rota HMAC e requisição com `Authorization`. O schema traz as primitivas e a leitura; gravar a sessão é do projeto que tiver login.
+
+**Por quê.** Token em `localStorage` é legível por qualquer script da página; `httpOnly` tira o token do alcance do JavaScript. A cifra impede ler o JWT de dentro do cookie copiado do disco. `Lax` mantém a navegação vinda de link de e-mail; o CSRF que o `Lax` deixa passar é barrado pelo header, que um form de outro site não consegue mandar sem o preflight do CORS.
+
+**Custo.**
+
+- O front precisa mandar `X-Requested-By` em toda chamada que altera estado.
+- Trocar `TOKEN_COOKIE_ENCRYPTION_KEY` derruba todas as sessões em cookie.
+- A cifra não impede reapresentar o cookie roubado inteiro.
+
+---
+
 ## O que este schema deliberadamente não tem
 
 - **Spec OpenAPI.** O projeto não gera nem valida contrato de API.
-- **Autenticação completa.** Há verificação de token, mas não há login, refresh nem revogação — o módulo `users` é referência de padrão, não de produto.
+- **Autenticação completa.** Há verificação de token, pelo `Authorization` ou pelo cookie, mas não há login, refresh nem revogação — as primitivas de cookie existem para o projeto que tiver login, e o módulo `users` é referência de padrão, não de produto.
 - **Soft delete, cache e cron.** Existem nos projetos que originaram este padrão. Não foram trazidos porque cada um carrega decisões próprias, que merecem ser tomadas no projeto que precisar deles.

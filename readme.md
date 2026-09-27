@@ -58,18 +58,19 @@ modules/<nome>/
 
 ## O que já vem pronto
 
-| Recurso                     | Onde                                                                              |
-| --------------------------- | --------------------------------------------------------------------------------- |
-| Envelope de resposta único  | `IResponseEx` + `sendResponse`                                                    |
-| Erro tipado por status HTTP | `UniversalError` e 12 subclasses, um middleware central                           |
-| Validação de entrada        | Zod no `dtos/`, aplicado por middleware; o schema é a fonte do tipo               |
-| Filtro e paginação          | `filterConfig` declarativa, traduzida para Prisma ou Mongo                        |
-| Log estruturado             | Winston com rotação diária e child logger por contexto                            |
-| Segurança                   | Helmet, CORS por ambiente, rate limit, `Content-Type` obrigatório                 |
-| Compressão de resposta      | `compression` no `AppServer`, conforme o `Accept-Encoding`                        |
-| Autenticação e autorização  | JWT; permissões por perfil em `req.user.abilities`, `authorize` na rota           |
-| Upload de arquivo           | Storage por porta, formato pelos bytes, imagem sem EXIF, SHA-256 contra duplicata |
-| Auditoria                   | `createdBy`/`updatedBy` no contrato de escrita dos repositórios                   |
+| Recurso                     | Onde                                                                                                 |
+| --------------------------- | ---------------------------------------------------------------------------------------------------- |
+| Envelope de resposta único  | `IResponseEx` + `sendResponse`                                                                       |
+| Erro tipado por status HTTP | `UniversalError` e 12 subclasses, um middleware central                                              |
+| Validação de entrada        | Zod no `dtos/`, aplicado por middleware; o schema é a fonte do tipo                                  |
+| Filtro e paginação          | `filterConfig` declarativa, traduzida para Prisma ou Mongo                                           |
+| Log estruturado             | Winston com rotação diária e child logger por contexto                                               |
+| Segurança                   | Helmet, CORS por ambiente, rate limit, `Content-Type` obrigatório                                    |
+| Compressão de resposta      | `compression` no `AppServer`, conforme o `Accept-Encoding`                                           |
+| Autenticação e autorização  | JWT por Bearer ou cookie cifrado; permissões por perfil em `req.user.abilities`, `authorize` na rota |
+| Proteção CSRF               | Header `X-Requested-By` em método que altera estado; CORS com credencial só para origem explícita    |
+| Upload de arquivo           | Storage por porta, formato pelos bytes, imagem sem EXIF, SHA-256 contra duplicata                    |
+| Auditoria                   | `createdBy`/`updatedBy` no contrato de escrita dos repositórios                                      |
 
 ## Comandos
 

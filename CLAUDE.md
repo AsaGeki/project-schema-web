@@ -68,6 +68,8 @@ A filtragem da listagem é declarativa: o repositório concreto declara `filterC
 
 Permissão `grupo:acao`, somada dos perfis do usuário e resolvida pelo `verifyToken` em `req.user.abilities`. Rota confere com `authorize(EPermissao<Modulo>.X)`; regra que depende do dado fica no service. Módulo novo declara o enum de permissões e registra o grupo em `modules/permissoes/catalogoPermissoes.ts`. O perfil `Administrador` (`todasPermissoes`) só muda pelo seed.
 
+O token vem do `Authorization` ou, na falta dele, do cookie cifrado. Chamada do front que altera estado manda `X-Requested-By: <CSRF_HEADER_VALUE>`; rota HMAC fica sob `/api/internal/`.
+
 ## Arquivos e APIs externas
 
 Arquivo vai para `IFileStorage` (token `FileStorage`) e o banco guarda só a key; formato é conferido pelos bytes (`detectarFormato`), nunca pelo `mimetype`. `authorize` vem antes do `upload(...)` na rota. API externa segue a seção "Client de API externa" do `docs/PADROES.md`: um client por API em `infra/clients/`, atrás de interface, com `code` estável por falha.

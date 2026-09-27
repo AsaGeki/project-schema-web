@@ -26,6 +26,7 @@ src/
   configs/                     fora de shared, plural
     envConfig.ts               única leitura de process.env, agrupada por domínio
     corsConfig.ts              configuração derivada, com lógica própria
+    sessionConfig.ts           Secure e __Host- derivados de PUBLIC_URL
     database/
       prismaClient.ts
       mongoClient.ts
@@ -52,7 +53,7 @@ src/
     services/                  LoggerService, HashService
     types/                     response.ts  pagination.ts  filter.ts  audit.ts  global.d.ts
     utils/                     subpasta por domínio, um util por arquivo
-      auth/  files/  http/  pagination/  query/  time/
+      auth/  files/  http/  pagination/  query/  time/  url/
   modules/
     <modulo>/
       dtos/

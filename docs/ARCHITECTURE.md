@@ -4,9 +4,9 @@
 | ------------------- | ------------------------------------------------------------------ |
 | Prompt summary      | Documentar a arquitetura do schema base após a reescrita do `src/` |
 | Creation date       | 2026-09-01                                                         |
-| Change count        | 8                                                                  |
+| Change count        | 9                                                                  |
 | Last update date    | 2026-09-27                                                         |
-| Last prompt summary | Documentar o upload e o client externo                             |
+| Last prompt summary | Documentar a sessão por cookie e o CSRF                            |
 
 Contrato e nomenclatura estão em [`PADROES.md`](PADROES.md); o porquê de cada escolha, e o que ela custa, está em [`DECISOES.md`](DECISOES.md). Este documento cobre camadas, direção de dependência e o que precisa existir para um módulo novo funcionar.
 
@@ -127,13 +127,22 @@ Cada módulo tem seu `container/index.ts`, importado pelo container global em `s
 
 Permissão é uma string `grupo:acao` (`users:read`). O usuário tem as permissões somadas dos perfis dele; o perfil `Administrador`, criado pelo seed, tem `todasPermissoes` e vale como `*`.
 
-- O `verifyToken` valida o token, resolve as permissões pelo `sub` (porta `IResolvedorDePermissoes`, implementada no módulo `permissoes`, com uma consulta ao banco por requisição) e popula `req.user` com `id` e `abilities`. Usuário que não existe mais recebe 401. Ele é aplicado por `router.use()` no `Route` do módulo; rota pública fica **antes** dessa linha — é o caso de `POST /api/users`.
+- O `verifyToken` valida o token — do `Authorization` ou, na falta dele, do cookie de access token, decifrado por `readAccessToken` —, resolve as permissões pelo `sub` (porta `IResolvedorDePermissoes`, implementada no módulo `permissoes`, com uma consulta ao banco por requisição) e popula `req.user` com `id` e `abilities`. Usuário que não existe mais recebe 401. Ele é aplicado por `router.use()` no `Route` do módulo; rota pública fica **antes** dessa linha — é o caso de `POST /api/users`.
 - `authorize('grupo:acao')` fica na rota, depois do `verifyToken` e antes de qualquer middleware que grave algo. Exige todas as permissões informadas; `*` passa em tudo.
 - Permissão que depende do dado fica no service, que recebe `req.user`: "o próprio usuário, ou quem tem `users:update`".
 
 Cada módulo declara as próprias permissões num enum `EPermissao<Modulo>.ts` na raiz do módulo, e o grupo entra em `modules/permissoes/catalogoPermissoes.ts`. O `pnpm db:seed` sincroniza o catálogo com o banco: cria o que falta e remove o que saiu do código, tirando a permissão dos perfis junto.
 
 O último usuário com acesso total não pode ser removido nem perder o perfil — 409.
+
+## Sessão por cookie e CSRF
+
+O schema traz as primitivas, não o login: `setAuthCookies` e `clearAuthCookies` (em `shared/utils/auth/cookies.ts`) ficam para o projeto que tiver login gravar a sessão.
+
+- **Cookie de token:** valor cifrado com AES-256-GCM (`cookieCrypto`), `httpOnly`, `SameSite=Lax`, `path=/`. `Secure` e o prefixo `__Host-` saem de `PUBLIC_URL` em HTTPS (`configs/sessionConfig.ts`), não do `NODE_ENV`.
+- **CSRF:** o `csrfMiddleware` exige `X-Requested-By: <CSRF_HEADER_VALUE>` em POST, PUT, PATCH e DELETE. Passam sem ele: rotas sob `/api/internal/` (HMAC) e requisições com `Authorization`, que o navegador não anexa sozinho.
+- **CORS:** `credentials` só com lista explícita em `CORS`; com `*`, o cookie não atravessa origem.
+- **URL de retorno:** `origemConfiavel` aceita só http/https com origem em `ALLOWED_RETURN_ORIGINS`.
 
 ## Upload de arquivo
 
