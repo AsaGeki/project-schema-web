@@ -1,3 +1,4 @@
+import { MulterError } from 'multer';
 import { ZodError } from 'zod';
 
 import { isProduction } from '@configs/envConfig';
@@ -35,6 +36,20 @@ function mapBodyParserError(error: Error): UniversalError | null {
       return new UnsupportedMediaTypeError({ message: 'Charset ou encoding do corpo não é suportado.' });
     default:
       return null;
+  }
+}
+
+/** Erros do multer, lançados ao receber multipart, no formato de erro padrão da API. */
+function mapMulterError(error: MulterError): UniversalError {
+  switch (error.code) {
+    case 'LIMIT_FILE_SIZE':
+      return new PayloadTooLargeError({ message: 'Arquivo acima do tamanho máximo permitido.', code: error.code });
+    case 'LIMIT_FILE_COUNT':
+      return new BadRequestError({ message: 'Arquivos demais num envio só.', code: error.code });
+    case 'LIMIT_UNEXPECTED_FILE':
+      return new BadRequestError({ message: `Campo de arquivo inesperado: ${error.field}.`, code: error.code });
+    default:
+      return new BadRequestError({ message: 'Não foi possível receber os arquivos enviados.', code: error.code });
   }
 }
 
@@ -76,6 +91,7 @@ function resolveError(error: Error): UniversalError | null {
     });
   }
 
+  if (error instanceof MulterError) return mapMulterError(error);
   if (isPrismaError(error)) return mapPrismaError(error);
   if (isMongoError(error)) return mapMongoError(error);
 
