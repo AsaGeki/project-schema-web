@@ -18,6 +18,8 @@ const envSchema = z.object({
   PORT: z.coerce.number().default(3000),
   /** Host deste backend, sem protocolo nem porta. */
   SELF_HOST: z.string().default('localhost'),
+  /** URL pública pela qual o navegador chega a este backend. HTTPS liga `Secure` e o prefixo `__Host-` nos cookies. */
+  PUBLIC_URL: z.url({ error: 'PUBLIC_URL deve ser uma URL válida' }).default('http://localhost:3000'),
   CORS: z.string().default('*'),
   JSON_LIMIT: z.string().default('2mb'),
   /** Quantos proxies reversos existem na frente da API; 0 ignora o `x-forwarded-for`. */
@@ -40,6 +42,19 @@ const envSchema = z.object({
   /** Segredo do refresh token — deve ser diferente de JWT_SECRET. */
   JWT_REFRESH_SECRET: z.string(),
   JWT_REFRESH_EXPIRES_IN: z.string().default('12h'),
+  /** Chave da cifra dos cookies de token. Trocá-la invalida todas as sessões em cookie. */
+  TOKEN_COOKIE_ENCRYPTION_KEY: z.string().min(32, 'TOKEN_COOKIE_ENCRYPTION_KEY deve ter no mínimo 32 caracteres'),
+  ACCESS_TOKEN_COOKIE_NAME: z.string().default('access_token'),
+  REFRESH_TOKEN_COOKIE_NAME: z.string().default('refresh_token'),
+  REFRESH_TOKEN_COOKIE_TTL_MS: z.coerce
+    .number()
+    .int()
+    .positive()
+    .default(7 * 24 * 60 * 60 * 1000),
+  /** Origens aceitas como destino de retorno, separadas por vírgula. */
+  ALLOWED_RETURN_ORIGINS: z.string().default(''),
+  /** Valor do header `X-Requested-By` que o front manda em toda chamada que altera estado. Não é segredo. */
+  CSRF_HEADER_VALUE: z.string().min(1).default('project-schema'),
   /** Chaves de integração server-to-server, no formato `id:segredo,id2:segredo2`. */
   API_KEYS_HMAC: z.string().default(''),
   /** Janela de tolerância do timestamp assinado, em milissegundos. */
@@ -74,6 +89,7 @@ export const env = {
     NODE_ENV: raw.NODE_ENV,
     PORT: raw.PORT,
     SELF_HOST: raw.SELF_HOST,
+    PUBLIC_URL: raw.PUBLIC_URL,
     CORS: raw.CORS,
     JSON_LIMIT: raw.JSON_LIMIT,
     TRUST_PROXY: raw.TRUST_PROXY,
@@ -102,5 +118,11 @@ export const env = {
     JWT_EXPIRES_IN: raw.JWT_EXPIRES_IN,
     JWT_REFRESH_SECRET: raw.JWT_REFRESH_SECRET,
     JWT_REFRESH_EXPIRES_IN: raw.JWT_REFRESH_EXPIRES_IN,
+    TOKEN_COOKIE_ENCRYPTION_KEY: raw.TOKEN_COOKIE_ENCRYPTION_KEY,
+    ACCESS_TOKEN_COOKIE_NAME: raw.ACCESS_TOKEN_COOKIE_NAME,
+    REFRESH_TOKEN_COOKIE_NAME: raw.REFRESH_TOKEN_COOKIE_NAME,
+    REFRESH_TOKEN_COOKIE_TTL_MS: raw.REFRESH_TOKEN_COOKIE_TTL_MS,
+    ALLOWED_RETURN_ORIGINS: raw.ALLOWED_RETURN_ORIGINS,
+    CSRF_HEADER_VALUE: raw.CSRF_HEADER_VALUE,
   },
 } as const;

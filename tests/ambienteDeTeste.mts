@@ -7,6 +7,7 @@ import { fileURLToPath } from 'url';
 export const SEGREDOS_DE_TESTE = {
   JWT_SECRET: 'segredo-de-teste',
   JWT_REFRESH_SECRET: 'segredo-refresh-de-teste',
+  TOKEN_COOKIE_ENCRYPTION_KEY: 'chave-de-teste-com-pelo-menos-32-caracteres',
 };
 
 /** Raiz de upload dos testes, fora do projeto: cada suíte apaga o que criou. */
