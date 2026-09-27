@@ -4,9 +4,9 @@
 | ------------------- | ------------------------------------------------------------ |
 | Prompt summary      | Documentar o contrato de sucesso e de erro na fronteira HTTP |
 | Creation date       | 2026-09-01                                                   |
-| Change count        | 3                                                            |
+| Change count        | 4                                                            |
 | Last update date    | 2026-09-27                                                   |
-| Last prompt summary | Tirar o isAdmin do exemplo de criação                        |
+| Last prompt summary | Documentar o download e os erros do multer                   |
 
 Fonte de verdade: [`src/shared/types/response.ts`](../src/shared/types/response.ts), [`src/shared/infra/https/sendResponse.ts`](../src/shared/infra/https/sendResponse.ts), [`src/shared/errors/UniversalError.ts`](../src/shared/errors/UniversalError.ts) e [`src/shared/infra/https/middlewares/errorMiddleware.ts`](../src/shared/infra/https/middlewares/errorMiddleware.ts).
 
@@ -75,6 +75,10 @@ Os campos de paginação só aparecem em resposta paginada, na raiz, e vêm do r
 ### Sem conteúdo
 
 `204` e `304` não podem ter corpo; o `sendResponse` encerra a resposta sem serializar. O service devolve `{ success: true, status: 204 }` e nada mais.
+
+### Download
+
+Rota de download responde com o arquivo (`res.download`), fora do envelope, com o nome original no `Content-Disposition`. Registro cujo arquivo não está mais no storage responde 404 no formato de erro padrão.
 
 ## Erro
 
@@ -150,7 +154,9 @@ flowchart TD
   U -- sim --> R[status + toJSON]
   U -- não --> Z{ZodError?}
   Z -- sim --> V["422 VALIDATION_FAILED<br/>details = issues"]
-  Z -- não --> P{"código P#### do Prisma?"}
+  Z -- não --> ML{MulterError?}
+  ML -- sim --> MU["413 / 400<br/>code = código do multer"]
+  ML -- não --> P{"código P#### do Prisma?"}
   P -- sim --> MP[mapPrismaError]
   P -- não --> M{"erro nomeado do Mongoose?"}
   M -- sim --> MM[mapMongoError]
@@ -160,6 +166,7 @@ flowchart TD
   MP --> R
   MM --> R
   MB --> R
+  MU --> R
   V --> R
 ```
 
@@ -187,8 +194,19 @@ Fora de produção o 500 genérico inclui `error` com a mensagem original; em pr
 | `ValidationError`         | 422 — com `details` por campo     |
 | demais nomes reconhecidos | 400 genérico                      |
 
+### Tradução do multer
+
+| Código do multer        | Vira                          |
+| ----------------------- | ----------------------------- |
+| `LIMIT_FILE_SIZE`       | 413 — arquivo acima do limite |
+| `LIMIT_FILE_COUNT`      | 400 — arquivos demais         |
+| `LIMIT_UNEXPECTED_FILE` | 400 — com o nome do campo     |
+| demais                  | 400 genérico                  |
+
+O código do multer vai no campo `code`.
+
 ## O que não existe hoje
 
 - Não há tradução de erro de `jsonwebtoken` no middleware: o `verifyToken` já converte qualquer falha em `UnauthorizedError`.
-- Não há `code` padronizado para os erros de negócio lançados pelos services — só os que vêm do Zod e dos bancos preenchem o campo.
+- Nem todo erro de negócio tem `code`: preenchem o campo os de permissões (`PERMISSAO_INEXISTENTE`, `PERFIL_INEXISTENTE`, `CATALOGO_DESATUALIZADO`) e de arquivos (`FORMATO_NAO_ACEITO`, `ARQUIVO_REPETIDO`), além dos que vêm do Zod, dos bancos e do multer.
 - Não há spec OpenAPI neste repositório.

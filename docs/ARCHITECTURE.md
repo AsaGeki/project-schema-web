@@ -4,9 +4,9 @@
 | ------------------- | ------------------------------------------------------------------ |
 | Prompt summary      | Documentar a arquitetura do schema base após a reescrita do `src/` |
 | Creation date       | 2026-09-01                                                         |
-| Change count        | 7                                                                  |
+| Change count        | 8                                                                  |
 | Last update date    | 2026-09-27                                                         |
-| Last prompt summary | Documentar a autorização por perfil                                |
+| Last prompt summary | Documentar o upload e o client externo                             |
 
 Contrato e nomenclatura estão em [`PADROES.md`](PADROES.md); o porquê de cada escolha, e o que ela custa, está em [`DECISOES.md`](DECISOES.md). Este documento cobre camadas, direção de dependência e o que precisa existir para um módulo novo funcionar.
 
@@ -135,6 +135,29 @@ Cada módulo declara as próprias permissões num enum `EPermissao<Modulo>.ts` n
 
 O último usuário com acesso total não pode ser removido nem perder o perfil — 409.
 
+## Upload de arquivo
+
+```mermaid
+flowchart LR
+  A[POST multipart] --> B[verifyToken]
+  B --> C[authorize]
+  C -->|403| X[nada gravado]
+  C --> D[multer em UPLOADS_DIR/.recebendo]
+  D -->|LIMIT_FILE_SIZE| E[413]
+  D --> F[CreateService]
+  F --> G[detectarFormato]
+  G -->|fora da lista| H[415]
+  G --> I[otimizarImagem, se imagem]
+  I --> J[lerAssinatura]
+  J -->|repetido| K[409]
+  J --> L[storage.save]
+  L --> M[insertMany]
+  M -->|falha| N[deleteMany + storage.remove]
+  F -.finally.-> O[descartarTemporarios]
+```
+
+O `LocalDiskStorage` move com `rename`, que exige origem e destino no mesmo disco: por isso o multer recebe dentro de `UPLOADS_DIR`. O nome no disco é UUID, nunca o do usuário.
+
 ## Checklist de módulo novo
 
 1. `dtos/<Nome>DTO.ts` — schema Zod, `IX` derivado dele, `IXCreate`/`IXUpdate` compondo `IAuditFields`.
@@ -147,6 +170,8 @@ O último usuário com acesso total não pode ser removido nem perder o perfil �
 8. Importar o container no `shared/container/index.ts` e a rota no `shared/infra/https/routes/router.ts`.
 9. `tests/modules/<nome>/services/<Acao>Service.test.ts` — teste do service com o repositório mockado; `*.integration.test.ts` no caminho do repositório, dentro de `tests/`, quando o comportamento depende do banco real.
 10. `EPermissao<Modulo>.ts` com as permissões do módulo, o grupo registrado em `catalogoPermissoes.ts`, e `authorize` nas rotas. Rodar `pnpm db:seed` para o banco conhecer as permissões novas.
+11. Upload: `authorize` antes de `upload(maximo).array('campo')` na rota, service no fluxo da seção "Arquivos" do `PADROES.md`, e lista de extensões aceitas no módulo.
+12. API externa: `infra/clients/<Nome>Client.ts` atrás de `I<Nome>Client`, config com `configurado`, tabela de erro com `code` estável — seção "Client de API externa" do `PADROES.md`.
 
 ## Anti-padrões
 

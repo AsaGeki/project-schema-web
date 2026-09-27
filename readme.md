@@ -29,6 +29,7 @@ src/
     infra/
       database/            contrato comum + base Prisma + base Mongoose
       cache/               singleFlight
+      storage/             IFileStorage e LocalDiskStorage
       https/               AppServer, sendResponse, rateLimiter, middlewares, router
     services/              LoggerService, HashService
     types/                 response, pagination, filter, audit
@@ -37,6 +38,7 @@ src/
     users/                 módulo de referência sobre Prisma
     logs/                  módulo de referência sobre Mongoose
     permissoes/            perfis, catálogo de permissões e resolução por usuário
+    arquivos/              upload, download e remoção de arquivo (Mongo + storage)
   server.ts
 ```
 
@@ -56,17 +58,18 @@ modules/<nome>/
 
 ## O que já vem pronto
 
-| Recurso                     | Onde                                                                    |
-| --------------------------- | ----------------------------------------------------------------------- |
-| Envelope de resposta único  | `IResponseEx` + `sendResponse`                                          |
-| Erro tipado por status HTTP | `UniversalError` e 12 subclasses, um middleware central                 |
-| Validação de entrada        | Zod no `dtos/`, aplicado por middleware; o schema é a fonte do tipo     |
-| Filtro e paginação          | `filterConfig` declarativa, traduzida para Prisma ou Mongo              |
-| Log estruturado             | Winston com rotação diária e child logger por contexto                  |
-| Segurança                   | Helmet, CORS por ambiente, rate limit, `Content-Type` obrigatório       |
-| Compressão de resposta      | `compression` no `AppServer`, conforme o `Accept-Encoding`              |
-| Autenticação e autorização  | JWT; permissões por perfil em `req.user.abilities`, `authorize` na rota |
-| Auditoria                   | `createdBy`/`updatedBy` no contrato de escrita dos repositórios         |
+| Recurso                     | Onde                                                                              |
+| --------------------------- | --------------------------------------------------------------------------------- |
+| Envelope de resposta único  | `IResponseEx` + `sendResponse`                                                    |
+| Erro tipado por status HTTP | `UniversalError` e 12 subclasses, um middleware central                           |
+| Validação de entrada        | Zod no `dtos/`, aplicado por middleware; o schema é a fonte do tipo               |
+| Filtro e paginação          | `filterConfig` declarativa, traduzida para Prisma ou Mongo                        |
+| Log estruturado             | Winston com rotação diária e child logger por contexto                            |
+| Segurança                   | Helmet, CORS por ambiente, rate limit, `Content-Type` obrigatório                 |
+| Compressão de resposta      | `compression` no `AppServer`, conforme o `Accept-Encoding`                        |
+| Autenticação e autorização  | JWT; permissões por perfil em `req.user.abilities`, `authorize` na rota           |
+| Upload de arquivo           | Storage por porta, formato pelos bytes, imagem sem EXIF, SHA-256 contra duplicata |
+| Auditoria                   | `createdBy`/`updatedBy` no contrato de escrita dos repositórios                   |
 
 ## Comandos
 

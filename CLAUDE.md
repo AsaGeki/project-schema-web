@@ -68,6 +68,10 @@ A filtragem da listagem é declarativa: o repositório concreto declara `filterC
 
 Permissão `grupo:acao`, somada dos perfis do usuário e resolvida pelo `verifyToken` em `req.user.abilities`. Rota confere com `authorize(EPermissao<Modulo>.X)`; regra que depende do dado fica no service. Módulo novo declara o enum de permissões e registra o grupo em `modules/permissoes/catalogoPermissoes.ts`. O perfil `Administrador` (`todasPermissoes`) só muda pelo seed.
 
+## Arquivos e APIs externas
+
+Arquivo vai para `IFileStorage` (token `FileStorage`) e o banco guarda só a key; formato é conferido pelos bytes (`detectarFormato`), nunca pelo `mimetype`. `authorize` vem antes do `upload(...)` na rota. API externa segue a seção "Client de API externa" do `docs/PADROES.md`: um client por API em `infra/clients/`, atrás de interface, com `code` estável por falha.
+
 ## Git e commits
 
 - **Conventional Commits em português**: `tipo: descrição` (`feat:`, `fix:`, `refactor:`, `docs:`, `chore:`, `perf:`).
@@ -77,6 +81,10 @@ Permissão `grupo:acao`, somada dos perfis do usuário e resolvida pelo `verifyT
 ## Dependências novas
 
 Antes de rodar `pnpm add` ou `pnpm add -D`, **pergunte primeiro** — mesmo para lib pequena ou aparentemente óbvia.
+
+## Exceção de lint
+
+Nunca adicione `eslint-disable`, `eslint-disable-next-line` ou `eslint-disable-line` por conta própria, nem com justificativa no comentário. Se o lint acusa, corrija o código; se a exceção parecer o único caminho, **pare e pergunte explicitamente antes** de escrever.
 
 ## Testes
 

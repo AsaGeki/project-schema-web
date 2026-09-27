@@ -36,6 +36,7 @@ src/
       prismaErrors.ts  mongoErrors.ts
     infra/
       cache/                   singleFlight — tem estado, por isso não é util
+      storage/                 IFileStorage (porta) e LocalDiskStorage
       database/
         IBaseRepository.ts     contrato agnóstico de banco
         prisma/BasePrismaRepository.ts
@@ -45,12 +46,13 @@ src/
         app.ts                 classe AppServer
         sendResponse.ts
         rateLimiter.ts
+        upload.ts              fábrica do multer (destino, charset, limites)
         middlewares/
         routes/router.ts       barrel global das rotas
     services/                  LoggerService, HashService
     types/                     response.ts  pagination.ts  filter.ts  audit.ts  global.d.ts
     utils/                     subpasta por domínio, um util por arquivo
-      auth/  http/  pagination/  query/  time/
+      auth/  files/  http/  pagination/  query/  time/
   modules/
     <modulo>/
       dtos/
@@ -316,6 +318,72 @@ e depende sempre da interface, nunca da classe concreta. Cada módulo tem seu
 módulo, nunca de string solta. Regra que depende do dado ("o próprio usuário ou quem tem
 permissão") fica no service, que recebe `req.user` como `IUsuarioAutenticado` e confere com
 `hasRequiredPermissions`.
+
+## Arquivos
+
+O arquivo mora atrás de `IFileStorage` (token `FileStorage`); o banco grava só a key devolvida por
+`save`. A rota de envio usa `upload(maximo).array('campo')` **depois** do `authorize`, e o service
+segue a ordem:
+
+1. `detectarFormato` pelos bytes, contra a lista de extensões aceitas do módulo;
+2. `otimizarImagem` quando é imagem (EXIF e GPS saem, lado maior até 2560px);
+3. `lerAssinatura` para o SHA-256, que barra duplicata no envio e no banco;
+4. `storage.save`, guardando a key;
+5. em erro, sai o que já foi gravado (registros e arquivos); no `finally`, `descartarTemporarios`.
+
+O download responde com o arquivo (`res.download`), fora do envelope. Referência: módulo `arquivos`.
+
+## Client de API externa
+
+Um arquivo por API externa, em `modules/<modulo>/infra/clients/<Nome>Client.ts`, é o único lugar
+que conhece paths, headers e formato da API. O service depende da interface `I<Nome>Client` (em
+`repositories/` do módulo) pelo token, nunca do client. Cliente HTTP é `axios`, sempre com
+`timeout`.
+
+- **Configuração em `configs/<nome>Config.ts`**, com `configurado: boolean`. Credencial ausente não
+  derruba o boot: a chamada responde 503 `<API>_NAO_CONFIGURADO` sem sair da máquina.
+- **Token na instância.** O client é singleton; o token fica num campo com validade menor que a
+  documentada, e login concorrente com token vencido passa por `singleFlight('<api>-login', ...)`.
+- **Tabela de erro.** Cada falha vira `UniversalError` com `code` estável:
+
+| Falha do outro lado                | Resposta daqui | `code`                           |
+| ---------------------------------- | -------------- | -------------------------------- |
+| 404                                | 404            | `<API>_<RECURSO>_NAO_ENCONTRADO` |
+| 400 ou 412                         | 422            | `<API>_CONSULTA_RECUSADA`        |
+| 401 ou 403 no login                | 500            | `<API>_ACESSO_NEGADO`            |
+| timeout, falha de rede, 429 ou 5xx | 503            | `<API>_INDISPONIVEL`             |
+
+- **Custo no log.** Chamada cobrada por consulta sai numa linha `info`.
+
+```ts
+@injectable()
+export default class ExemploClient implements IExemploClient {
+  private readonly http = axios.create({ baseURL: exemploConfig.url, timeout: exemploConfig.timeoutMs });
+  private token?: { valor: string; expiraEm: number };
+
+  public async consultar(id: string): Promise<IExemploResposta> {
+    if (!exemploConfig.configurado) {
+      throw new ServiceUnavailableError({
+        message: 'A integração não está configurada.',
+        code: 'EXEMPLO_NAO_CONFIGURADO',
+      });
+    }
+
+    const token = await this.obterToken();
+    // chamada, tradução do erro pela tabela, log de custo
+  }
+
+  private async obterToken(): Promise<string> {
+    if (this.token && this.token.expiraEm > Date.now()) return this.token.valor;
+
+    return singleFlight('exemplo-login', async () => {
+      // login; guarda o token com folga sobre a validade documentada
+    });
+  }
+}
+```
+
+O schema não tem API externa real; a referência de origem é o `SerasaClient` do `avb_one_back`.
 
 ## Ferramental
 

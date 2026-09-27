@@ -4,9 +4,9 @@
 | ------------------- | -------------------------------------------------- |
 | Prompt summary      | Documentar como levantar o ambiente do schema base |
 | Creation date       | 2026-09-01                                         |
-| Change count        | 6                                                  |
+| Change count        | 7                                                  |
 | Last update date    | 2026-09-27                                         |
-| Last prompt summary | Documentar o seed das permissões                   |
+| Last prompt summary | Documentar as variáveis de upload                  |
 
 ## Requisitos
 
@@ -50,6 +50,8 @@ Os nomes seguem o padrão dos backends da empresa (`avb_one_back`, `fbi_back`, `
 | `JWT_REFRESH_EXPIRES_IN`      | `12h`           |                                                                                                      |
 | `API_KEYS_HMAC`               | vazio           | Chaves de integração server-to-server, `id:segredo,id2:segredo2`.                                    |
 | `API_KEYS_HMAC_TOLERANCIA_MS` | `300000`        | Janela do timestamp assinado, em milissegundos.                                                      |
+| `UPLOADS_DIR`                 | `./uploads`     | Raiz dos arquivos enviados. Em produção, pasta fora do projeto.                                      |
+| `MAX_FILE_SIZE`               | `50MB`          | Por arquivo: número seguido de `B`, `KB`, `MB` ou `GB`. Acima dele, 413.                             |
 
 Ficam fora do `envConfig`: `MEMORY_LIMIT_MB`, lida pelo `HealthService`; `npm_package_name`/`npm_package_version`, injetadas pelo pnpm e devolvidas no `GET /api/`; e `SEED_ADMIN_EMAIL`/`SEED_ADMIN_PASSWORD`, lidas pelo `prisma/seed.ts`.
 

@@ -4,9 +4,9 @@
 | ------------------- | ------------------------------------------------------------------- |
 | Prompt summary      | Registrar o porquê de cada decisão arquitetural, não só o que ela é |
 | Creation date       | 2026-09-01                                                          |
-| Change count        | 6                                                                   |
+| Change count        | 7                                                                   |
 | Last update date    | 2026-09-27                                                          |
-| Last prompt summary | Registrar as permissões por perfil                                  |
+| Last prompt summary | Registrar o storage de arquivo e o client externo                   |
 
 [`PADROES.md`](PADROES.md) diz **o que** é o padrão e [`ARCHITECTURE.md`](ARCHITECTURE.md) diz **como** montar um módulo. Este documento diz **por quê**, e o que cada escolha custa.
 
@@ -193,6 +193,30 @@ As permissões são lidas do banco a cada requisição, e não gravadas no token
 - Uma consulta ao banco a cada requisição autenticada.
 - A checagem "sobra outro usuário com acesso total" não trava o banco: duas remoções simultâneas dos dois últimos administradores podem passar juntas.
 - Adicionar permissão exige rodar o seed no deploy.
+
+---
+
+## Arquivo atrás de porta, só a key no banco
+
+**Decisão.** O arquivo enviado vai para `IFileStorage`, e o registro no Mongo guarda a key relativa, o nome original, o tipo detectado pelos bytes, o tamanho e o SHA-256. O formato é conferido pelo conteúdo, imagem é regravada sem metadados, e duplicata do mesmo usuário é recusada.
+
+**Por quê.** Trocar o disco local por um bucket é trocar a implementação da porta, sem migrar registro. O `mimetype` do multipart é o que o cliente declara, e aceitar por ele deixa passar executável renomeado. Foto de celular carrega GPS no EXIF. O hash impede o mesmo anexo repetido e prova que o arquivo não mudou.
+
+**Custo.**
+
+- `sharp` e `file-type` no runtime; o `file-type` só existe como ESM e entra por `import()` dinâmico.
+- O índice único por `{ createdBy, hashSha256 }` impede o mesmo usuário de guardar duas cópias de propósito.
+- Com mais de uma instância, o disco local precisa ser compartilhado, ou a porta ganha outra implementação.
+
+---
+
+## Client de API externa num ponto só
+
+**Decisão.** Cada API externa tem um client em `infra/clients/`, atrás de interface, com a tabela de erro própria e o token na instância. Configuração ausente vira 503 na chamada, não falha de boot.
+
+**Por quê.** Mudança de contrato do outro lado se resolve num arquivo. O `code` estável deixa o front distinguir "não configurado" de "fora do ar" de "recusado". Boot que depende de credencial de terceiro derruba a API inteira por causa de uma integração.
+
+**Custo.** O schema não tem exemplo executável: a regra vive no `PADROES.md`.
 
 ---
 
