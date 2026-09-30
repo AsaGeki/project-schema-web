@@ -55,7 +55,7 @@
     "handlebars": "4.7.9",
     "helmet": "^8.0.0",
     "jsonwebtoken": "^9.0.2",
-    "mongoose": "^8.24.3",
+    "mongoose": "^9.10.2",
     "multer": "^2.4.0",
     "nodemailer": "9.0.3",
     "reflect-metadata": "^0.2.2",
